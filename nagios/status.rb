@@ -34,7 +34,7 @@ module Nagios
         # Returns a list of all hosts, pass an array of service names to restrict the list to
         # hosts with that service
         def find_hosts(options = {})
-            options[:withservice] ? withservice = options[:withservice] : withservice = []
+            withservice = options.fetch(:withservice, [])
 
             hosts = []
 
@@ -58,10 +58,10 @@ module Nagios
         # Returns a list of all services, pass an array of host names to restrict the list to
         # services for those hosts
         def find_services(options = {})
-            options[:forhost] ? forhost = options[:forhost] : forhost = []
-            options[:notifyenabled] ? notifications = options[:notifyenabled] : notifications = nil
-            options[:action] ? action = options[:action] : action = nil
-            options[:withservice] ? withservice = options[:withservice] : withservice = []
+            forhost = options.fetch(:forhost, [])
+            notifications = options.fetch(:notifyenabled, nil)
+            action = options.fetch(:action, nil)
+            withservice = options.fetch(:withservice, [])
 
             services = []
             searchquery = []
