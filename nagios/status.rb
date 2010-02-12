@@ -31,32 +31,40 @@ module Nagios
                 end
         end
 
-        # Returns a list of all hosts, pass an array of service names to restrict the list to
-        # hosts with that service
+        # Returns a list of all hosts matching the options in options
         def find_hosts(options = {})
+            forhost = options.fetch(:forhost, [])
+            notifications = options.fetch(:notifyenabled, nil)
+            action = options.fetch(:action, nil)
             withservice = options.fetch(:withservice, [])
 
             hosts = []
+            searchquery = []
 
-            if withservice.size > 0
-                withservice.each do |service|
-                    @status["hosts"].each do |host, v|
-                        if @status["hosts"][host].has_key?("servicestatus")
-                            hosts << host if @status["hosts"][host]["servicestatus"].has_key?(service)
-                        end
-                    end
-                end
+            # Build up a search query for find_with_properties each
+            # array member is a hash of property and a match
+            forhost.each do |host|
+                searchquery << search_term("host_name", host)
+            end
 
-            # just give us all hosts
-            else
-                @status["hosts"].each { |host, v| hosts << host }
+            withservice.each do |s|
+                searchquery << search_term("service_description", s)
+            end
+
+            searchquery << {"notifications_enabled" => notifications.to_s} if notifications
+
+            hsts = find_with_properties(searchquery)
+
+            hsts.each do |host|
+                host_name = host["host_name"]
+
+                hosts << parse_command_template(action, host_name, "", host_name)
             end
 
             hosts.uniq.sort
         end
 
-        # Returns a list of all services, pass an array of host names to restrict the list to
-        # services for those hosts
+        # Returns a list of all services matching the options in options
         def find_services(options = {})
             forhost = options.fetch(:forhost, [])
             notifications = options.fetch(:notifyenabled, nil)
@@ -66,31 +74,19 @@ module Nagios
             services = []
             searchquery = []
 
-            # Build up a search query for find_service_with_properties 
-            # each array member is a hash of property and a match
-            if forhost.size > 0
-                forhost.each do |host|
-                    # Make a regex if the input on host matches "/"
-                    host = Regexp.new(host.gsub("\/", "")) if host.match("/")
-
-                    searchquery << {"host_name" => host}
-                end
-            else
-                    searchquery << {"host_name" => /./}
+            # Build up a search query for find_with_properties each
+            # array member is a hash of property and a match
+            forhost.each do |host|
+                searchquery << search_term("host_name", host)
             end
 
-            if withservice.size > 0
-                withservice.each do |s|
-                    # Make a regex if the input on service matches "/"
-                    s = Regexp.new(s.gsub("\/", "")) if s.match("/")
-
-                    searchquery << {"service_description" => s}
-                end
+            withservice.each do |s|
+                searchquery << search_term("service_description", s)
             end
 
             searchquery << {"notifications_enabled" => notifications.to_s} if notifications
 
-            svcs = find_service_with_properties(searchquery)
+            svcs = find_with_properties(searchquery)
 
             svcs.each do |service|
                 service_description = service["service_description"]
@@ -108,19 +104,26 @@ module Nagios
         end
 
         private
+
+        # Add search terms, does all the mangling of regex vs string and so on
+        def search_term(haystack, needle)
+            needle = Regexp.new(needle.gsub("\/", "")) if needle.match("^/")
+            {haystack => needle}
+        end
+
         # Return service blocks for each service that matches any options like:
         #
         # "host_name" => "foo.com"
         #
         # The 2nd parameter can be a regex too.
-        def find_service_with_properties(search)
+        def find_with_properties(search)
             services = []
             query = []
 
             query << search if search.class == Hash
             query = search if search.class == Array
 
-            find_hosts.each do |host|
+            @status["hosts"].each do |host,v|
                 find_host_services(host) do |service|
                     matchcount = 0
 
