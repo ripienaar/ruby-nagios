@@ -155,7 +155,11 @@ module Nagios
         # Parses a template given with a nagios command string and populates vars
         # else return the string given in default
         def parse_command_template(template, host, service, default)
-            template == nil ? default : template.gsub(/\$\{host\}/, host).gsub(/\$\{service\}/, service).gsub(/\$\{tstamp\}/, Time.now.to_i.to_s)
+            if template.nil?
+                default
+            else
+                template.gsub(/\$\{host\}/, host).gsub(/\$\{service\}/, service).gsub(/\$\{tstamp\}/, Time.now.to_i.to_s)
+            end
         end
 
         # Figures out the service name from a block in a nagios status file
