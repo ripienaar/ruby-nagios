@@ -115,7 +115,7 @@ begin
             when "--disable-checks"
                 action = "[${tstamp}] DISABLE_SVC_CHECK;${host};${service};${tstamp}"
             when "--acknowledge"
-                action = "[${tstamp}] ACKNOWLEDGE_SVC_PROBLEM;;${host};${service};1;0;1;#{ENV['USER']};Acknowledged from CLI"
+                action = "[${tstamp}] ACKNOWLEDGE_SVC_PROBLEM;${host};${service};1;0;1;#{ENV['USER']};Acknowledged from CLI"
             when "--notify-enabled"
                 notify = 1
             when "--notify-disabled"
