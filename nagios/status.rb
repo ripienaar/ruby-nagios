@@ -234,6 +234,10 @@ module Nagios
         def handle_servicecomment(lines)
         end
 
+        # Parses hostcomment block
+        def handle_hostcomment(lines)
+        end
+        
         # Parses a programstatus block
         def handle_programstatus(lines)
             @status["process"] = {} unless @status["process"]
