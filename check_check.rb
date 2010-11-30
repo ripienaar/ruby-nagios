@@ -1,9 +1,12 @@
 #!/usr/bin/env ruby
 #
-# Check check.
+# Check check- aggregate results from other checks in your nagios instance.
+# Reads the 'status_file' for current states.
 #
-# Aggregate results from other checks in your nagios instance.
-# Reads the 'status_file' for current states
+# Useful for having lots of small checks roll up into an aggregate that
+# only alerts you once during failures, not N times.
+#
+# Also useful for business-view monitoring
 #
 
 require "rubygems"
