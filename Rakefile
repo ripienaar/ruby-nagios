@@ -5,7 +5,7 @@ task :package do
 end
 
 task :publish do
-  latest_gem = %x{ls -t nagios-manage.gem}.split("\n").first
+  latest_gem = %x{ls -t nagios-manage-*.gem}.split("\n").first
   system("gem push #{latest_gem}")
 end
 
