@@ -144,10 +144,17 @@ def main(args)
       end
     end # if results[state]
   end # for each non-OK state
-    
 
-  #total = results.values.reduce(0) { |sum, val| sum += val }
-  return 0
+  exitcode = 0
+
+  if results["WARNING"].length > 0
+    exitcode = 1
+  end
+
+  if results["CRITICAL"].length > 0
+    exitcode = 2
+  end
+  return exitcode
 end
 
 exit(main(ARGV))
