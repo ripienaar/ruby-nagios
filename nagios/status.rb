@@ -238,6 +238,37 @@ module Nagios
         def handle_hostcomment(lines)
         end
         
+        # Parses servicedowntime block
+        def handle_servicedowntime(lines)
+          host = get_host_name(lines)
+          service = get_service_name(lines)
+          downtime_id = get_downtime_id(lines)
+          @status["hosts"][host]["servicedowntime"] = {} unless @status["hosts"][host]["servicedowntime"]
+          @status["hosts"][host]["servicedowntime"][service] = downtime_id          
+        end
+        
+        # Parses hostdowntime block
+        def handle_hostdowntime(lines)
+          host = get_host_name(lines)
+          downtime_id = get_downtime_id(lines)
+          @status["hosts"][host]["hostdowntime"] = downtime_id
+        end
+        
+        # Parse the downtime_id out of a block
+        def get_downtime_id(lines)
+          if h = lines.grep(/\s+downtime_id=(.*)$/).first
+            if h =~ /downtime_id=(.+)$/
+              downtime_id = $1
+            else
+              raise("Can't parse downtime_id in block: #{h}")
+            end
+          else
+            raise("Can't find downtime_id in block")
+          end
+          
+          return downtime_id
+        end
+        
         # Parses a programstatus block
         def handle_programstatus(lines)
             @status["process"] = {} unless @status["process"]
