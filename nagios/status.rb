@@ -228,14 +228,52 @@ module Nagios
 
         # Parses a servicestatus block
         def handle_contactstatus(lines)
+          @status['contacts'] ||= {}
+          contact = get_contact_name(lines)
+          @status['contacts'][contact] ||= {}
+          lines.each do |line|
+            match = line.match(/^\s*(.+)=(.*)$/)
+            @status['contacts'][contact][match[1]] = match[2] unless match[1] == 'contact_name'
+          end
         end
-
+        
+        def get_contact_name(lines)
+          if h = lines.grep(/\s+contact_name=(\w+)/).first
+            if h =~ /contact_name=(.*)$/
+              contact_name = $1
+            else
+              raise("Can't parse contact_name in block: #{h}")
+            end
+          else
+            raise("Can't parse contactstatus block")
+          end
+          return contact_name
+        end
+        
         # Parses a servicecomment block
         def handle_servicecomment(lines)
+          host = get_host_name(lines)
+          service = get_service_name(lines)
+          @status["hosts"][host]['servicecomments'] ||= {}
+          @status["hosts"][host]['servicecomments'][service] ||= []
+          comment = {}
+          lines.each do |line|            
+            match = line.match(/^\s*(.+)=(.*)$/)
+            comment[match[1]] = match[2] unless match[1] == 'service_name'
+          end
+          @status['hosts'][host]['servicecomments'][service] << comment
         end
 
         # Parses hostcomment block
         def handle_hostcomment(lines)
+          host = get_host_name(lines)
+          @status['hosts'][host]['hostcomments'] ||= []
+          comment = {}
+          lines.each do |line|
+            match = line.match(/^\s*(.+)=(.*)$/)
+            comment[match[1]] = match[2] unless match[1] == 'host_name'
+          end
+          @status['hosts'][host]['hostcomments'] << comment
         end
         
         # Parses servicedowntime block
