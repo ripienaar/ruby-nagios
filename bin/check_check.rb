@@ -58,8 +58,7 @@ class Nagios::Status::Model
 
   def hosts(pattern=nil)
     if pattern
-      return @status.status["hosts"]
-      #.reject { |name,hostinfo| !pattern.match(name) }
+      return @status.status["hosts"].reject { |name,hostinfo| !pattern.match(name) }
     else
       return @status.status["hosts"]
     end # if pattern
