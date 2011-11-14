@@ -24,7 +24,7 @@ module Nagios
                     end
 
                     # end of a section
-                    if line =~ /\}/ && handler != ""
+                    if line =~ /\}/ && handler != "" && Nagios::Status.respond_to?("handle_#{handler}")
                         eval("handle_#{handler}(blocklines)")
                         handler = ""
                     end
