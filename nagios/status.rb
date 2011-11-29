@@ -326,7 +326,7 @@ module Nagios
             @status["hosts"][host]["hoststatus"] = {} unless @status["hosts"][host]["hoststatus"]
 
             lines.each do |l|
-                if l =~ /\s+(\w+)=(\w+)/
+                if l =~ /\s+(\w+)=(.+)\s*$/
                     @status["hosts"][host]["hoststatus"][$1] = $2
                 end
             end
