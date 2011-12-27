@@ -70,28 +70,28 @@ in the block! This can be not always the case.
 
 Example of a block:
 
-define contactgroup {
-        contactgroup_name       admins
-        alias   Nagios Administrators
-        members root
-        }
+  define contactgroup {
+          contactgroup_name       admins
+          alias   Nagios Administrators
+          members root
+          }
 
 Parsed data hash:
 
-irb(main):010:0> pp a.objects
-{:timeperiod=>
-  {"24x7"=>
-    {:timeperiod_name=>"24x7",
-     :alias=>"24 Hours A Day, 7 Days A Week",
-     :sunday=>"00:00-24:00",
-     :monday=>"00:00-24:00",
-     :tuesday=>"00:00-24:00",
-     :wednesday=>"00:00-24:00",
-     :thursday=>"00:00-24:00",
-     :friday=>"00:00-24:00",
-     :saturday=>"00:00-24:00"},
-   "never"=>{:timeperiod_name=>"never", :alias=>"Never"},
-
+    irb(main):010:0> pp a.objects
+     {:timeperiod=>
+      {"24x7"=>
+        {:timeperiod_name=>"24x7",
+         :alias=>"24 Hours A Day, 7 Days A Week",
+         :sunday=>"00:00-24:00",
+         :monday=>"00:00-24:00",
+         :tuesday=>"00:00-24:00",
+         :wednesday=>"00:00-24:00",
+         :thursday=>"00:00-24:00",
+         :friday=>"00:00-24:00",
+         :saturday=>"00:00-24:00"},
+       "never"=>{:timeperiod_name=>"never", :alias=>"Never"},
+    
 =end
 
     def parse
