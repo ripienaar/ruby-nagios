@@ -1,4 +1,4 @@
-#!/usr/bin/ruby
+#!/usr/bin/env ruby
 
 # A tool to do mass operations on nagios services.  It is intended to be run on 
 # the server that hosts nagios and it needs read access to the status.log file
@@ -52,6 +52,7 @@
 # Please open an issue at ruby-nagios.googlecode.com
 # with any queries
 
+$: << File.dirname(__FILE__) # Ruby 1.9 by default does not include '.'
 require 'nagios/status.rb'
 
 require 'getoptlong'
@@ -128,9 +129,8 @@ rescue
 end
 
 
-nagios = Nagios::Status.new
-
-nagios.parsestatus(statusfile)
+nagios = Nagios::Status.new(statusfile)
+nagios.parse
 
 
 # We want hosts so abuse the action field to print just the hostname
@@ -138,7 +138,7 @@ nagios.parsestatus(statusfile)
 # this really is just a noop and it reverts to noral behaviour
 if listhosts
     action = "${host}" if action == nil
-    forhost = "/." if forhost.size == 0
+    forhost = ["/."] if forhost.size == 0
 end
 
 options = {:forhost => forhost, :notifyenabled => notify, :action => action, :withservice => withservice}

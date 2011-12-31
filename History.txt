@@ -1,0 +1,8 @@
+* Sat Dec 31 09:05:48 JST 2011, dmytro
+  * Added constructor abd basic file checks
+  * Avoid using eval, use send instead
+  * Alias for :parsestatus -> :parse
+  * Change main script to reflect constructor change
+  * Main script: push '.' into $: for Ruby 1.9
+  * Main script change forhost to Array instead of String - breaks in
+    Ruby 1.9

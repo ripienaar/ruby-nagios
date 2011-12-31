@@ -1,16 +1,27 @@
 module Nagios
     class Status
-        attr_reader :status
+        attr_reader :status, :statusfile
+
+
+      def initialize(statusfile)
+        raise ArgumentError, "Statusfile file name must be provided" unless statusfile        
+        raise RuntimeError, "Statusfile does not exist" unless File.exist? statusfile
+        raise RuntimeError, "Statusfile is not readable" unless File.readable? statusfile
+        @statusfile = statusfile
+        @status = {}
+        @status["hosts"] = {}
+
+        self
+      end
 
         # Parses a nagios status file returning a data structure for all the data
-        def parsestatus(statusfile)
-                @status = {}
-                @status["hosts"] = {}
+        def parsestatus
 
                 handler = ""
                 blocklines = []
 
-                File.readlines(statusfile).each do |line|
+                File.readlines(@statusfile).each do |line|
+
                     # start of new sections
                     if line =~ /(\w+) \{/
                         blocklines = []
@@ -24,12 +35,14 @@ module Nagios
                     end
 
                     # end of a section
-                    if line =~ /\}/ && handler != "" && Nagios::Status.respond_to?("handle_#{handler}")
-                        eval("handle_#{handler}(blocklines)")
+                    if line =~ /\}/ && handler != "" && self.respond_to?("handle_#{handler}", true)
+                        self.send "handle_#{handler}".to_sym, blocklines
                         handler = ""
                     end
                 end
         end
+
+      alias :parse :parsestatus
 
         # Returns a list of all hosts matching the options in options
         def find_hosts(options = {})
