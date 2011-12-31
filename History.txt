@@ -1,9 +1,21 @@
 * Sat Dec 31 09:05:48 JST 2011, dmytro
   * Started History.txt file
-  * Added constructor abd basic file checks
-  * Avoid using eval, use send instead
-  * Alias for :parsestatus -> :parse
+  * Added constructor and basic file checks to Nagios::Status,
+    statusfile parameter now passed to constructor, instead of
+    parsestatus method.
   * Change main script to reflect constructor change
+  * Alias for :parsestatus -> :parse
+  * Avoid using eval, use send instead in parsestatus method
   * Main script: push '.' into $: for Ruby 1.9
   * Main script change forhost to Array instead of String - breaks in
     Ruby 1.9
+
+* Sat Dec 31 09:05:48 JST 2011, dmytro
+  * Parsers for main configuration file (nagios.cfg) and objects cache
+    file (objects.cache). Two new classes Nagios::Config and
+    Nagios::Objects. 
+    - Using Nagios::Objects would allow searches for hostgroups,
+    servicegroups, etc.
+  * Generic search method for Nagios::Objects class, mimicked after
+    ActiveRecord find_*_by_* method.
+  * nagios.rb file to simplify require of all classes.
