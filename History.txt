@@ -1,4 +1,5 @@
 * Sat Dec 31 09:05:48 JST 2011, dmytro
+  * Started History.txt file
   * Added constructor abd basic file checks
   * Avoid using eval, use send instead
   * Alias for :parsestatus -> :parse
