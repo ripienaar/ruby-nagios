@@ -40,6 +40,7 @@ module Nagios
                         handler = ""
                     end
                 end
+          self
         end
 
       alias :parse :parsestatus
