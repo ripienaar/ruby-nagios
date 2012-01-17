@@ -41,6 +41,10 @@ Can be used as:
       raise "Configuration file #{@config} does not exist" unless File.exist? @config
       raise "Configuration file #{@config} is not readable" unless File.readable? @config
 
+    end
+    
+    def parse
+
       File.readlines(@config).map{ |l| l.sub(/#.*$/,'')}.delete_if { |l| l=~ /^$/}.each do |l|
         key,val = l.strip.split('=',2)
         raise "Incorrect configuration line #{l}" unless key && val
