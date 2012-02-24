@@ -161,10 +161,10 @@ def main(args)
   exitcode = 0
 
   if settings.down_min_percent
-      if results["WARNING"].length > 0 && (results["WARNING"].length / total_results) >= settings.down_min_percent.to_i
+      if results["WARNING"].length > 0 && (results["WARNING"].length / total_results) * 100 >= settings.down_min_percent.to_i
           exitcode = 1
       end
-      if results["CRITICAL"].length > 0 && (results["CRITICAL"].length / total_results) >= settings.down_min_percent.to_i
+      if results["CRITICAL"].length > 0 && (results["CRITICAL"].length / total_results) * 100 >= settings.down_min_percent.to_i
           exitcode = 2
       end
   else
