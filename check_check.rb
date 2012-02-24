@@ -102,7 +102,7 @@ def main(args)
 
     opts.on("-p NUM", "--percent NUM",
             "Only alert if this percentage of the cluster is down") do |val|
-      settings.down_min_percent = val
+      settings.down_min_percent = Float(val)
     end
   end # OptionParser.new
 
