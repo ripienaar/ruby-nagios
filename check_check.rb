@@ -76,7 +76,7 @@ class Nagios::Status::Model
 
 end # class Nagios::Status::Model
 
-Settings = Struct.new(:nagios_cfg, :status_path, :service_pattern, :host_pattern)
+Settings = Struct.new(:nagios_cfg, :status_path, :service_pattern, :host_pattern, :down_min_percent)
 def main(args)
   progname = File.basename($0)
   settings = Settings.new
@@ -98,6 +98,11 @@ def main(args)
     opts.on("-h REGEX", "--host REGEX",
             "Aggregate only services from hosts matching the given pattern") do |val|
       settings.host_pattern = val
+    end
+
+    opts.on("-p NUM", "--percent NUM",
+            "Only alert if this percentage of the cluster is down") do |val|
+      settings.down_min_percent = Float(val)
     end
   end # OptionParser.new
 
@@ -142,10 +147,12 @@ def main(args)
   puts
 
   # More data output
+  total_results = 0.0
   ["WARNING", "CRITICAL", "UNKNOWN"].each do |state|
     if results[state] && results[state].size > 0
       puts "Services in #{state}:"
       results[state].sort { |a,b| a["host_name"] <=> b["host_name"] }.each do |service|
+        total_results += 1
         puts "  #{service["host_name"]} => #{service["service_description"]}"
       end
     end # if results[state]
@@ -153,12 +160,21 @@ def main(args)
 
   exitcode = 0
 
-  if results["WARNING"].length > 0
-    exitcode = 1
-  end
+  if settings.down_min_percent
+      if results["WARNING"].length > 0 && (results["WARNING"].length / total_results) * 100 >= settings.down_min_percent
+          exitcode = 1
+      end
+      if results["CRITICAL"].length > 0 && (results["CRITICAL"].length / total_results) * 100 >= settings.down_min_percent
+          exitcode = 2
+      end
+  else
+    if results["WARNING"].length > 0
+      exitcode = 1
+    end
 
-  if results["CRITICAL"].length > 0
-    exitcode = 2
+    if results["CRITICAL"].length > 0
+      exitcode = 2
+    end
   end
   return exitcode
 end
