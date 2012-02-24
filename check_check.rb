@@ -147,7 +147,7 @@ def main(args)
   puts
 
   # More data output
-  total_results = 0
+  total_results = 0.0
   ["WARNING", "CRITICAL", "UNKNOWN"].each do |state|
     if results[state] && results[state].size > 0
       puts "Services in #{state}:"
@@ -161,10 +161,10 @@ def main(args)
   exitcode = 0
 
   if settings.down_min_percent
-      if results["WARNING"].length > 0 && (results["WARNING"].length / total_results) * 100 >= settings.down_min_percent.to_i
+      if results["WARNING"].length > 0 && (results["WARNING"].length / total_results) * 100 >= settings.down_min_percent
           exitcode = 1
       end
-      if results["CRITICAL"].length > 0 && (results["CRITICAL"].length / total_results) * 100 >= settings.down_min_percent.to_i
+      if results["CRITICAL"].length > 0 && (results["CRITICAL"].length / total_results) * 100 >= settings.down_min_percent
           exitcode = 2
       end
   else
