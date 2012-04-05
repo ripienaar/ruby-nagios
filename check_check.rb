@@ -34,12 +34,12 @@ class Nagios::Status::Model
   def services(service_pattern=nil, host_pattern=nil)
     matches = []
     self.hosts(host_pattern).each do |host, hostinfo|
-      #Skip hosts if the host is down - obviously the services will be too, and we should already have alerted on the host.
-      next if hostinfo[current_state].to_i != 0
+      #Skip hosts if the host is down - obviously the services will be too, and we should already have alerted on the host.__
+      next if hostinfo["hoststatus"]["current_state"].to_i != 0
       # Skip hosts if there is no hostinfo (no services associated, etc).
       next if hostinfo["servicestatus"].nil?
       # Skip hosts if they are in scheduled downtime
-      next if hostinfo["hostdowntime"].to_i > 0
+      next if hostinfo["hoststatus"]["scheduled_downtime_depth"].to_i > 0
       hostinfo["servicestatus"].each do |name, status| 
         next if service_pattern and !service_pattern.match(name)
 
