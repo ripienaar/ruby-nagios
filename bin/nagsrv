@@ -1,4 +1,4 @@
-#!/usr/bin/ruby
+#!/usr/bin/env ruby
 
 # A tool to do mass operations on nagios services.  It is intended to be run on
 # the server that hosts nagios and it needs read access to the status.log file
@@ -52,35 +52,9 @@
 # Please open an issue at ruby-nagios.googlecode.com
 # with any queries
 
-require 'nagios/status.rb'
+require 'nagios/status'
 
-require 'getoptlong'
-
-def showhelp
-  begin
-    require 'rdoc/ri/ri_paths'
-    require 'rdoc/usage'
-    RDoc::usage
-  rescue LoadError
-    puts ("Install RDoc::usage or view the comments in the top of the script to get detailed help")
-  end
-end
-
-opts = GetoptLong.new(
-  [ '--statusfile', '-s', GetoptLong::REQUIRED_ARGUMENT],
-  [ '--list-hosts', GetoptLong::NO_ARGUMENT],
-  [ '--list-services', GetoptLong::NO_ARGUMENT],
-  [ '--notify-enabled', GetoptLong::NO_ARGUMENT],
-  [ '--notify-disabled', GetoptLong::NO_ARGUMENT],
-  [ '--for-host', GetoptLong::REQUIRED_ARGUMENT],
-  [ '--with-service', GetoptLong::REQUIRED_ARGUMENT],
-  [ '--enable-notify', GetoptLong::NO_ARGUMENT],
-  [ '--disable-notify', GetoptLong::NO_ARGUMENT],
-  [ '--enable-checks', GetoptLong::NO_ARGUMENT],
-  [ '--disable-checks', GetoptLong::NO_ARGUMENT],
-  [ '--force-check', GetoptLong::NO_ARGUMENT],
-  [ '--acknowledge', GetoptLong::NO_ARGUMENT]
-)
+require 'optparse'
 
 statusfile = "status.log"
 listhosts = false
@@ -91,42 +65,69 @@ notify = nil
 action = nil
 options = nil
 
-begin
-  opts.each do |opt, arg|
-    case opt
-    when "--statusfile"
-      statusfile = arg
-    when "--list-hosts"
-      listhosts = true
-    when "--list-services"
-      listservices = true
-    when "--with-service"
-      withservice << arg
-    when "--for-host"
-      forhost << arg
-    when "--enable-notify"
-      action = "[${tstamp}] ENABLE_SVC_NOTIFICATIONS;${host};${service}"
-    when "--disable-notify"
-      action = "[${tstamp}] DISABLE_SVC_NOTIFICATIONS;${host};${service}"
-    when "--force-check"
-      action = "[${tstamp}] SCHEDULE_FORCED_SVC_CHECK;${host};${service};${tstamp}"
-    when "--enable-checks"
-      action = "[${tstamp}] ENABLE_SVC_CHECK;${host};${service};${tstamp}"
-    when "--disable-checks"
-      action = "[${tstamp}] DISABLE_SVC_CHECK;${host};${service};${tstamp}"
-    when "--acknowledge"
-      action = "[${tstamp}] ACKNOWLEDGE_SVC_PROBLEM;${host};${service};1;0;1;#{ENV['USER']};Acknowledged from CLI"
-    when "--notify-enabled"
-      notify = 1
-    when "--notify-disabled"
-      notify = 0
-    end
+OptionParser.new do |opts|
+  opts.separator "General Options"
+  opts.on("--statusfile FILE", "-s", "Path to the Nagios status.log") do |v|
+    statusfile = v
   end
-rescue
-  showhelp
-  exit 1
-end
 
+  opts.separator ""
+  opts.separator "Output Selectors"
+  opts.on("--list-hosts", "List hostnames that match certain criteria") do
+    listhosts = true
+  end
+
+  opts.on("--list-services", "List services that match certain criteria") do
+    listhosts = true
+  end
+
+  opts.separator ""
+  opts.separator "Service and Host Selectors"
+
+  opts.on("--with-service SERVICE", "Match a service or regular expression") do |v|
+    withservice << v
+  end
+
+  opts.on("--for-host HOST", "Restrict selection of services to a specific host") do |v|
+    forhost << v
+  end
+
+  opts.on("--notify-enabled", "List only services with notification enabled") do
+    notify = 1
+  end
+
+  opts.on("--notify-disabled", "List only services with notification disabled") do
+    notify = 0
+  end
+
+  opts.separator ""
+  opts.separator "Actions for Matched Services/Hosts"
+  opts.on("--enable-notify", "Enable notifications for selected services") do
+    action = "[${tstamp}] ENABLE_SVC_NOTIFICATIONS;${host};${service}"
+  end
+
+  opts.on("--disable-notify", "Disable notifications for selected services") do
+    action = "[${tstamp}] DISABLE_SVC_NOTIFICATIONS;${host};${service}"
+  end
+
+  opts.on("--enable-checks", "Enable checks for selected services") do
+    action = "[${tstamp}] ENABLE_SVC_CHECK;${host};${service};${tstamp}"
+  end
+
+  opts.on("--disable-checks", "Disable checks for selected services") do
+    action = "[${tstamp}] DISABLE_SVC_CHECK;${host};${service};${tstamp}"
+  end
+
+  opts.on("--force-check", "Force checks for selected services") do
+    action = "[${tstamp}] SCHEDULE_FORCED_SVC_CHECK;${host};${service};${tstamp}"
+  end
+
+  opts.on("--ackknowledge", "Ackknowledge services without sending notifies") do
+    action = "[${tstamp}] ACKNOWLEDGE_SVC_PROBLEM;${host};${service};1;0;1;#{ENV['USER']};Acknowledged from CLI"
+  end
+end.parse!
+
+abort "Cannot find #{statusfile}" unless File.exist?(statusfile)
 
 nagios = Nagios::Status.new
 

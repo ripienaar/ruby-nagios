@@ -40,7 +40,7 @@ class Nagios::Status::Model
       next if hostinfo["servicestatus"].nil?
       # Skip hosts if they are in scheduled downtime
       next if hostinfo["hoststatus"]["scheduled_downtime_depth"].to_i > 0
-      hostinfo["servicestatus"].each do |name, status| 
+      hostinfo["servicestatus"].each do |name, status|
         next if service_pattern and !service_pattern.match(name)
 
         # Skip myself, if we are a check running from nagios.
@@ -54,14 +54,14 @@ class Nagios::Status::Model
         # If not in hard state, report 'last_hard_state' instead.
         if status["state_type"] != "1" # not in hard state
           status["current_state"] = status["last_hard_state"]
-          # TODO(sissel): record that this service is currently 
+          # TODO(sissel): record that this service is currently
           # in a soft state transition.
         end
 
         # TODO(sissel): Maybe also skip checks that are 'acknowledged'
         matches << status
       end
-    end # hosts().each 
+    end # hosts().each
     return matches
   end # def services
 
@@ -132,7 +132,7 @@ def main(args)
 
   # Collect check results by state
   status.services(service_pattern, host_pattern).each do |service_status|
-    state = Nagios::Status::Model::STATEMAP[service_status["current_state"]] 
+    state = Nagios::Status::Model::STATEMAP[service_status["current_state"]]
     if state == nil
       state = "UNKNOWN(state=#{service_status["current_state"]})"
     end
