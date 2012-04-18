@@ -61,7 +61,8 @@ service /puppet/ on host /dev2/:
     nagios = Nagios::Status.new
     nagios.parsestatus("status.log")
 
-    options = {:forhost => "/dev2/", :action => "${host}", :withservice => "/puppet/"}
+    options = {:forhost => "/dev2/", :action => "${host}",
+               :withservice => "/puppet/"}
     services = nagios.find_services(options)
 
     puts services.join("\n")
@@ -76,7 +77,8 @@ string is a template that lets you return the matches
 in any format you like, here's a template to Acknowledge
 services:
 
-    "[${tstamp}] ACKNOWLEDGE_SVC_PROBLEM;;${host};${service};1;0;1;#{ENV['USER']};Acknowledged from CLI"
+    "[${tstamp}] ACKNOWLEDGE_SVC_PROBLEM;;${host};${service};1 \
+     ;0;1;#{ENV['USER']};Acknowledged from CLI"
 
 The only variables it supports now is ${host}, ${service}
 and ${tstamp} we can easily add more if needed.
