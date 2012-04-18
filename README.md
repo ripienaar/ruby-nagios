@@ -9,6 +9,9 @@ status log file and let you query it for information
 or create external commands to be piped into the nagios
 command file.
 
+You can get this software here on GitHub or via RubyGems
+as *ruby-nagios*
+
 Using on the CLI?
 =================
 Find out what services match a regular expression:
