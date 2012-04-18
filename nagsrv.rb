@@ -1,6 +1,6 @@
 #!/usr/bin/ruby
 
-# A tool to do mass operations on nagios services.  It is intended to be run on 
+# A tool to do mass operations on nagios services.  It is intended to be run on
 # the server that hosts nagios and it needs read access to the status.log file
 # typically found in the var dir.
 #
@@ -21,7 +21,7 @@
 # --with-service
 #   Pass a specific service name or a regex in the form
 #   /pattern/ if you pass a regex you can only pass this
-#   option once, if you pass specific services you can 
+#   option once, if you pass specific services you can
 #   use this option many times the services will be searches
 #   in an OR fasion
 #
@@ -46,7 +46,7 @@
 # --acknowledge
 #   Ackknowledge services without sending notifies
 #
-# Released under the terms of the Apache version 2 
+# Released under the terms of the Apache version 2
 # license
 #
 # Please open an issue at ruby-nagios.googlecode.com
@@ -57,29 +57,29 @@ require 'nagios/status.rb'
 require 'getoptlong'
 
 def showhelp
-    begin  
-        require 'rdoc/ri/ri_paths'
-        require 'rdoc/usage'  
-        RDoc::usage
-    rescue LoadError
-        puts ("Install RDoc::usage or view the comments in the top of the script to get detailed help")
-    end
+  begin
+    require 'rdoc/ri/ri_paths'
+    require 'rdoc/usage'
+    RDoc::usage
+  rescue LoadError
+    puts ("Install RDoc::usage or view the comments in the top of the script to get detailed help")
+  end
 end
 
 opts = GetoptLong.new(
-    [ '--statusfile', '-s', GetoptLong::REQUIRED_ARGUMENT],
-    [ '--list-hosts', GetoptLong::NO_ARGUMENT],
-    [ '--list-services', GetoptLong::NO_ARGUMENT],
-    [ '--notify-enabled', GetoptLong::NO_ARGUMENT],
-    [ '--notify-disabled', GetoptLong::NO_ARGUMENT],
-    [ '--for-host', GetoptLong::REQUIRED_ARGUMENT],
-    [ '--with-service', GetoptLong::REQUIRED_ARGUMENT],
-    [ '--enable-notify', GetoptLong::NO_ARGUMENT],
-    [ '--disable-notify', GetoptLong::NO_ARGUMENT],
-    [ '--enable-checks', GetoptLong::NO_ARGUMENT],
-    [ '--disable-checks', GetoptLong::NO_ARGUMENT],
-    [ '--force-check', GetoptLong::NO_ARGUMENT],
-    [ '--acknowledge', GetoptLong::NO_ARGUMENT]
+  [ '--statusfile', '-s', GetoptLong::REQUIRED_ARGUMENT],
+  [ '--list-hosts', GetoptLong::NO_ARGUMENT],
+  [ '--list-services', GetoptLong::NO_ARGUMENT],
+  [ '--notify-enabled', GetoptLong::NO_ARGUMENT],
+  [ '--notify-disabled', GetoptLong::NO_ARGUMENT],
+  [ '--for-host', GetoptLong::REQUIRED_ARGUMENT],
+  [ '--with-service', GetoptLong::REQUIRED_ARGUMENT],
+  [ '--enable-notify', GetoptLong::NO_ARGUMENT],
+  [ '--disable-notify', GetoptLong::NO_ARGUMENT],
+  [ '--enable-checks', GetoptLong::NO_ARGUMENT],
+  [ '--disable-checks', GetoptLong::NO_ARGUMENT],
+  [ '--force-check', GetoptLong::NO_ARGUMENT],
+  [ '--acknowledge', GetoptLong::NO_ARGUMENT]
 )
 
 statusfile = "status.log"
@@ -92,39 +92,39 @@ action = nil
 options = nil
 
 begin
-    opts.each do |opt, arg|
-        case opt
-            when "--statusfile"
-                statusfile = arg
-            when "--list-hosts"
-                listhosts = true
-            when "--list-services"
-                listservices = true
-            when "--with-service"
-                withservice << arg
-            when "--for-host"
-                forhost << arg
-            when "--enable-notify"
-                action = "[${tstamp}] ENABLE_SVC_NOTIFICATIONS;${host};${service}"
-            when "--disable-notify"
-                action = "[${tstamp}] DISABLE_SVC_NOTIFICATIONS;${host};${service}"
-            when "--force-check"
-                action = "[${tstamp}] SCHEDULE_FORCED_SVC_CHECK;${host};${service};${tstamp}"
-            when "--enable-checks"
-                action = "[${tstamp}] ENABLE_SVC_CHECK;${host};${service};${tstamp}"
-            when "--disable-checks"
-                action = "[${tstamp}] DISABLE_SVC_CHECK;${host};${service};${tstamp}"
-            when "--acknowledge"
-                action = "[${tstamp}] ACKNOWLEDGE_SVC_PROBLEM;${host};${service};1;0;1;#{ENV['USER']};Acknowledged from CLI"
-            when "--notify-enabled"
-                notify = 1
-            when "--notify-disabled"
-                notify = 0
-        end
+  opts.each do |opt, arg|
+    case opt
+    when "--statusfile"
+      statusfile = arg
+    when "--list-hosts"
+      listhosts = true
+    when "--list-services"
+      listservices = true
+    when "--with-service"
+      withservice << arg
+    when "--for-host"
+      forhost << arg
+    when "--enable-notify"
+      action = "[${tstamp}] ENABLE_SVC_NOTIFICATIONS;${host};${service}"
+    when "--disable-notify"
+      action = "[${tstamp}] DISABLE_SVC_NOTIFICATIONS;${host};${service}"
+    when "--force-check"
+      action = "[${tstamp}] SCHEDULE_FORCED_SVC_CHECK;${host};${service};${tstamp}"
+    when "--enable-checks"
+      action = "[${tstamp}] ENABLE_SVC_CHECK;${host};${service};${tstamp}"
+    when "--disable-checks"
+      action = "[${tstamp}] DISABLE_SVC_CHECK;${host};${service};${tstamp}"
+    when "--acknowledge"
+      action = "[${tstamp}] ACKNOWLEDGE_SVC_PROBLEM;${host};${service};1;0;1;#{ENV['USER']};Acknowledged from CLI"
+    when "--notify-enabled"
+      notify = 1
+    when "--notify-disabled"
+      notify = 0
     end
-rescue 
-    showhelp
-    exit 1
+  end
+rescue
+  showhelp
+  exit 1
 end
 
 
@@ -137,13 +137,11 @@ nagios.parsestatus(statusfile)
 # and select all hosts unless other action/forhost was desigred then
 # this really is just a noop and it reverts to noral behaviour
 if listhosts
-    action = "${host}" if action == nil
-    forhost = "/." if forhost.size == 0
+  action = "${host}" if action == nil
+  forhost = "/." if forhost.size == 0
 end
 
 options = {:forhost => forhost, :notifyenabled => notify, :action => action, :withservice => withservice}
 services = nagios.find_services(options)
 
 puts services.join("\n")
-
-# vi:tabstop=4:expandtab:ai
