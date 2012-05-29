@@ -22,22 +22,23 @@ Can be used as:
 =end  
   class Config
 
-    DEFAULT_CONFIG = "/etc/nagios*/nagios.cfg"
-
+    ##
     # Read and parse configuration file.
     #
     # @param [String] config_file PATH to the configuration file. If
     #     PATH is not provided method will look for configuration file
     #     +nagios.cfg+ in +/etc/nagios*+ directory.
+    #
     # @note If you have more than one /etc/nagios* directories then
     #    only first one will be used. For example, Debian can have
     #    both Nagios 2 and 3 installed. In the latter case
     #    configuration file is +/etc/nagios3/nagios.cfg+.
+    #
     # @author Dmytro Kovalov, dmytro.kovalov@gmail.com
     def initialize config_file=nil
-      @config = config_file || Dir.glob(DEFAULT_CONFIG).first
+      @config = config_file || Dir.glob( DEFAULT[:nagios_cfg_glob] ).first
       
-      raise "No configuration file option and no files in #{DEFAULT_CONFIG} " unless @config
+      raise "No configuration file option and no files in #{ DEFAULT[:nagios_cfg_glob] } " unless @config
       raise "Configuration file #{@config} does not exist" unless File.exist? @config
       raise "Configuration file #{@config} is not readable" unless File.readable? @config
 
