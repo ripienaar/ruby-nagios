@@ -2,10 +2,11 @@ module Nagios
 
 =begin rdoc
 
-Configuration parser for Nagios. Constructor parses Nagios' main
-config file and returns an object: each configuration option's value
-assigned to an instance variable and attribute reader method is
-created.
+Parser of the main Nagios configuration file -- nagios.cfg. 
+
+Constructor parses Nagios' main config file and returns an object:
+each configuration option's value assigned to an instance variable and
+attribute reader method is created.
 
 Can be used as:
 
@@ -18,25 +19,34 @@ Can be used as:
       nagios.status_file
   => "/var/cache/nagios3/status.dat"
 
+= Configuration of the module
+
+Default search directory and file pattern (Dir.glob) is defined by
+Nagios::DEFAULT[:nagios_cfg_glob] constant. It is set in
++config/default.rb+ file. 
+
+@note If you have more than one /etc/nagios* directories then only
+first one will be used. For example, Debian can have both Nagios 2 and
+3 installed. In the latter case configuration file is
++/etc/nagios3/nagios.cfg+.
+
 
 =end  
   class Config
 
     ##
-    # Read and parse configuration file.
-    #
+    # Initialize configuration file path. Check existence and
+    # readability of the file, raise exception if not.
+    # 
     # @param [String] config_file PATH to the configuration file. If
     #     PATH is not provided method will look for configuration file
-    #     +nagios.cfg+ in +/etc/nagios*+ directory.
+    #     +nagios.cfg+ in directory, defined by
+    #     Nagios::DEFAULT[:nagios_cfg_glob] constant ( ususally
+    #     /etc/nagios*/nagios.cfg);
     #
-    # @note If you have more than one /etc/nagios* directories then
-    #    only first one will be used. For example, Debian can have
-    #    both Nagios 2 and 3 installed. In the latter case
-    #    configuration file is +/etc/nagios3/nagios.cfg+.
-    #
-    # @author Dmytro Kovalov, dmytro.kovalov@gmail.com
     def initialize config_file=nil
-      @config = config_file || Dir.glob( DEFAULT[:nagios_cfg_glob] ).first
+
+      @config = config_file || Dir.glob( Nagios::DEFAULT[:nagios_cfg_glob] ).first
       
       raise "No configuration file option and no files in #{ DEFAULT[:nagios_cfg_glob] } " unless @config
       raise "Configuration file #{@config} does not exist" unless File.exist? @config
@@ -44,6 +54,11 @@ Can be used as:
 
     end
     
+    ##
+    # Read and parse main Nagios  configuration file +nagios.cfg+
+    #
+    #
+    # @author Dmytro Kovalov, dmytro.kovalov@gmail.com
     def parse
 
       File.readlines(@config).map{ |l| l.sub(/#.*$/,'')}.delete_if { |l| l=~ /^$/}.each do |l|
