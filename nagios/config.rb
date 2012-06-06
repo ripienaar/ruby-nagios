@@ -48,11 +48,17 @@ first one will be used. For example, Debian can have both Nagios 2 and
 
       @config = config_file || Dir.glob( Nagios::DEFAULT[:nagios_cfg_glob] ).first
       
+      @configuration ||= {}
       raise "No configuration file option and no files in #{ DEFAULT[:nagios_cfg_glob] } " unless @config
       raise "Configuration file #{@config} does not exist" unless File.exist? @config
       raise "Configuration file #{@config} is not readable" unless File.readable? @config
 
     end
+
+    # Hash holding all the configuration after parsing. Additionally
+    # for every key in the configuration Hash method is created with
+    # the same name, which returns the value.
+    attr_accessor :configuration
     
     ##
     # Read and parse main Nagios  configuration file +nagios.cfg+
@@ -66,9 +72,15 @@ first one will be used. For example, Debian can have both Nagios 2 and
         raise "Incorrect configuration line #{l}" unless key && val
 
         case key
-        when /cfg_(file|dir)/ # There could be multiple entries for cfg_dir/file
+          # There could be multiple entries for cfg_dir/file, so these
+          # are Arrays.
+        when /cfg_(file|dir)/
+          @configuration[key] ||= []
+          @configuration[key] << val
           instance_variable_set("@#{key}", (instance_variable_get("@#{key}") || []) << val )
         else
+
+          @configuration[key] = val
           instance_variable_set("@#{key}", val)
           instance_eval val =~ /^[\d\.-]+/ ? 
           "def #{key}; return #{val}; end" :
