@@ -52,8 +52,7 @@
 # Please open an issue at ruby-nagios.googlecode.com
 # with any queries
 
-require 'nagios/status'
-
+require 'nagios'
 require 'optparse'
 
 statusfile = "status.log"
