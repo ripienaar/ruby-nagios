@@ -60,14 +60,14 @@ Dmytro Kovalov, dmytro.kovalov@gmail.com
     # @param [String] path UNIX path to the objects.cache file
     # @see Nagios::Objects.parse
     def initialize path
-      raise "File does not exist" unless File.exist? path
-      raise "File is not readable" unless File.readable? path
-      @objects_file = path
+      raise "File #{path} does not exist" unless File.exist? path
+      raise "File #{path} is not readable" unless File.readable? path
+      @path = path
       @objects = {}
     end
  
     # PATH to the objects.cache file
-    attr_accessor :objects_file
+    attr_accessor :path
 
     # Parsed objects
     attr_accessor :objects
@@ -110,7 +110,7 @@ parsing. Same property can be accessed either using Hash @objects
 =end
     def parse
       block = {}
-      content = File.readlines objects_file
+      content = File.readlines path
       handler = nil
       content.each do |line|
         case

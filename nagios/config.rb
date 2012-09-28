@@ -47,7 +47,8 @@ first one will be used. For example, Debian can have both Nagios 2 and
     def initialize config_file=nil
 
       @config = config_file || Dir.glob( Nagios::DEFAULT[:nagios_cfg_glob] ).first
-      
+      @path = @config
+
       @configuration ||= {}
       raise "No configuration file option and no files in #{ DEFAULT[:nagios_cfg_glob] } " unless @config
       raise "Configuration file #{@config} does not exist" unless File.exist? @config
@@ -59,6 +60,10 @@ first one will be used. For example, Debian can have both Nagios 2 and
     # for every key in the configuration Hash method is created with
     # the same name, which returns the value.
     attr_accessor :configuration
+
+    # Path to main configuration file nagios.cfg
+
+    attr_accessor :path
     
     ##
     # Read and parse main Nagios  configuration file +nagios.cfg+

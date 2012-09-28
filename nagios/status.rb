@@ -1,13 +1,13 @@
 module Nagios
     class Status
-        attr_reader :status, :statusfile
+        attr_reader :status, :path
 
 
       def initialize(statusfile)
         raise ArgumentError, "Statusfile file name must be provided" unless statusfile        
-        raise RuntimeError, "Statusfile does not exist" unless File.exist? statusfile
-        raise RuntimeError, "Statusfile is not readable" unless File.readable? statusfile
-        @statusfile = statusfile
+        raise RuntimeError, "Statusfile #{statusfile} does not exist" unless File.exist? statusfile
+        raise RuntimeError, "Statusfile #{statusfile} is not readable" unless File.readable? statusfile
+        @path = statusfile
         @status = {}
         @status["hosts"] = {}
 
@@ -20,7 +20,7 @@ module Nagios
                 handler = ""
                 blocklines = []
 
-                File.readlines(@statusfile).each do |line|
+                File.readlines(@path).each do |line|
 
                     # start of new sections
                     if line =~ /(\w+) \{/
