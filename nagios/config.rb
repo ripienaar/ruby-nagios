@@ -92,6 +92,8 @@ first one will be used. For example, Debian can have both Nagios 2 and
             "def #{key}; return %Q{#{val}}; end"
         end
       end
+
+      self
     end
 
     # Special case for cfg_file and cfg_dir: they are Arrays
