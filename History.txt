@@ -1,3 +1,8 @@
+* Mon Oct  1 17:26:41 JST 2012, Dmytro Kovalov
+  * New ExternalCommnds class for submitting check results. 
+    Currently only 2 actions implemented:       
+    PROCESS_SERVICE_CHECK_RESULT, PROCESS_HOST_CHECK_RESULT
+
 * Sat Dec 31 09:05:48 JST 2011, dmytro
   * Started History.txt file
   * Added constructor and basic file checks to Nagios::Status,
