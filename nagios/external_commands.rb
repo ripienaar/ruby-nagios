@@ -180,7 +180,7 @@ module Nagios
       SCHEDULE_SERVICEGROUP_HOST_DOWNTIME: %w{servicegroup_name start_time end_time fixed trigger_id duration author comment},
       SCHEDULE_SERVICEGROUP_SVC_DOWNTIME: %w{servicegroup_name start_time end_time fixed trigger_id duration author comment},
       SCHEDULE_SVC_CHECK: %w{host_name service_description check_time},
-      SCHEDULE_SVC_DOWNTIME: %w{host_name service_desription><start_time end_time fixed trigger_id duration author comment},
+      SCHEDULE_SVC_DOWNTIME: %w{host_name service_desription start_time end_time fixed trigger_id duration author comment},
       SEND_CUSTOM_HOST_NOTIFICATION: %w{host_name options author comment},
       SEND_CUSTOM_SVC_NOTIFICATION: %w{host_name service_description options author comment},
       SET_HOST_NOTIFICATION_NUMBER: %w{host_name notification_number},
@@ -218,15 +218,9 @@ module Nagios
     #       => #<Nagios::ExternalCommands:0x007f8775138f18 ...
     def initialize path
       raise ArgumentError, "External command file name must be provided" unless path
-
       raise RuntimeError,  "External command directory holding file #{path} is not writable by this user." unless File.writable? File.dirname path
-
-      # In Nagios3 command file is purged and re-created each time commnds are processed/added.
-
-      #      raise RuntimeError,  "External command #{path} does not exist or not accessible" unless File.exist? path
-      #      raise RuntimeError,  "External command #{path} is not writable" unless File.writable? path
-      @path = path
       
+      @path = path
     end
 
     attr_reader :path
@@ -241,8 +235,21 @@ module Nagios
     # Time.to_i.to_s (i.e number of seconds since epoch).
     attr_accessor :ts
 
-    # Thes accessors requried for ERB Binding to work
-    attr_accessor :host_name, :service_description, :return_code, :plugin_output, :status_code
+    # TODO: make int dynamically later with:
+    # >> Nagios::ExternalCommands::ACTIONS.values.flatten.uniq
+    # This returns full list of Nagios varaibles used in external commands
+    #
+
+    attr_accessor :host_name, :sticky, :notify, :persistent, :author,
+    :comment, :service_description, :contact_name,
+    :notification_timeperiod, :value, :varname, :varvalue,
+    :event_handler_command, :check_command, :timeperiod,
+    :check_attempts, :check_interval, :check_timeperiod,
+    :notification_time, :comment_id, :downtime_id, :contactgroup_name,
+    :hostgroup_name, :servicegroup_name, :file_name, :delete,
+    :status_code, :plugin_output, :return_code, :start_time,
+    :end_time, :fixed, :trigger_id, :duration, :check_time,
+    :service_desription, :start_time, :options, :notification_number
 
     # Get private binding to use with ERB bindings.
     def get_binding
@@ -257,8 +264,14 @@ module Nagios
       raise ArgumentError, "Action name must be provided" unless params.has_key? :action
       raise ArgumentError, "Action name #{params[:action]} is not implemented" unless ACTIONS.keys.include? params[:action]
       
-      params.each do |k,v|
-        self.instance_variable_set "@#{k}", v
+      params.each { |k,v| self.instance_variable_set "@#{k}", v }
+
+      #
+      # Check that all variable that are used in the template are
+      # actually set, not nil's
+      #
+      ACTIONS[@action].each do |var|
+        raise ArgumentError, "Parameter :#{var} is required, cannot be nil" if self.instance_variable_get("@#{var}").nil?
       end
 
       self.ts = params[:ts] || Time.now.to_i.to_s
