@@ -76,41 +76,69 @@ module Nagios
 
     # Send command to Nagios. Prints formatted string to external command file (pipe).
     #
-    # @param [Hash or Array] params Data to write to command file pipe. Must
+    # @param [Hash or Array] data Data to write to command file pipe. Must
     #     include :action and all additional variables
     def write data
       case data
-      when Hash then params = [params]
+      when Hash then data = [data]
       else 
-        return false
+        return { :result => false, :data => "Input data type #{data.class} is not supproted." }
       end
 
-      params.each do |params|
-      end
-      raise ArgumentError, "Action name must be provided" unless params.has_key? :action
-      raise ArgumentError, "Action name #{params[:action]} is not implemented" unless ACTIONS.keys.include? params[:action]
-      
-      params.each { |k,v| self.instance_variable_set "@#{k}", v }
+      result, output = true, []
 
-      #
-      # Check that all variable that are used in the template are
-      # actually set, not nil's
-      #
-      ACTIONS[@action].each do |var|
-        raise ArgumentError, "Parameter :#{var} is required, cannot be nil" if self.instance_variable_get("@#{var}").nil?
-      end
+      data.each do |params|
+        
+        messages = []
 
-      self.ts = params[:ts] || Time.now.to_i.to_s
+        if params.has_key? :action
+          messages << "ArgumentError: Action name #{params[:action]} is not implemented" unless ACTIONS.keys.include? params[:action]
+        else
+          messages << "ArgumentError: Action name must be provided"
+        end
+        
+        # It makes sense to continue only if checks above did not fail
+        if messages.empty?
+          #
+          # Clear all attributes first - so no old data left
+          #
+          ACTIONS.values.flatten.uniq.each do |att|
+            self.instance_variable_set "@#{att}", nil
+          end
+          #
+          # And set it to param's value
+          #
+          params.each { |k,v| self.instance_variable_set "@#{k}", v }
+          #
+          # Check that all variable that are used in the template are
+          # actually set, not nil's
+          #
+          ACTIONS[@action].each do |var|
+            messages << "ArgumentError, Parameter :#{var} is required, cannot be nil"  if self.instance_variable_get("@#{var}").nil?
+          end
+          
+          # Try to write to file only if none of the above failed
+          if messages.empty?
+            self.ts = params[:ts] || Time.now.to_i.to_s
+            
+            format = "[#{ts}] " << ([self.action.to_s] + ACTIONS[self.action].map {|x| "<%= #{x} %>" }).join(';')
+            
+            begin
+              File.open(path, 'a') do |pipe|
+                pipe.puts ERB.new(format).result(self.get_binding)
+                pipe.close
+              end
+            rescue e
+              messages << e.message
+            end
+          end
+        end
+        
+        output << { data: params, result: messages.empty? , messages: messages }
+      end # data.each
 
-      format = "[#{ts}] " << ([self.action.to_s] + ACTIONS[self.action].map {|x| "<%= #{x} %>" }).join(';')
-      
-      File.open(path, 'a') do |pipe|
-        pipe.puts ERB.new(format).result(self.get_binding)
-        pipe.close
-      end
-      true
-    end
-
+      { result: result, data: output }
+    end # def write
   end
 end
 

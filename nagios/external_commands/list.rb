@@ -180,7 +180,7 @@ module Nagios
       STOP_OBSESSING_OVER_HOST_CHECKS: [],
       STOP_OBSESSING_OVER_SVC: %w{host_name service_description},
       STOP_OBSESSING_OVER_SVC_CHECKS: []
-    }
+    }.freeze
   end
 end
 
