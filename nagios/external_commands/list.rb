@@ -2,15 +2,15 @@ module Nagios
   class ExternalCommands
     # External commands list in nagios and format to send this to
     # Nagios. Keys of the Hash are names of commands, values are
-    # Array's of Nagios varables to be sent. Arrays are converted to
-    # ERB templates before printing, command name and all varibles
+    # Array's of Nagios variables to be sent. Arrays are converted to
+    # ERB templates before printing, command name and all variables
     # joined together by semicolons.
     #
     # Each variable must be defined as attr_accessor, these variables
     # are used in ERB binding.
     #
     # List of all available nagios external commands, formats and
-    # descripttions can be obtained from
+    # descriptions can be obtained from
     # http://www.nagios.org/developerinfo/externalcommands As of the
     # time of writing this list is 157 commands for Nagios 3.x.
     #

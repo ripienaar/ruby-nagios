@@ -29,11 +29,8 @@ module Nagios
     #
     # == Example
     #
-    #     >> cmd = Nagios::ExternalCommands.new('/tmp/test', 
-    #         {:host_name => 'host', 
-    #          :action => :PROCESS_HOST_CHECK_RESULT})
+    #     >> cmd = Nagios::ExternalCommands.new('/var/nagios/rw/nagios.cmd')
     #
-    #       => #<Nagios::ExternalCommands:0x007f8775138f18 ...
     def initialize path
       raise ArgumentError, "External command file name must be provided" unless path
       raise RuntimeError,  "External command directory holding file #{path} is not writable by this user." unless File.writable? File.dirname path
@@ -58,6 +55,7 @@ module Nagios
     # This returns full list of Nagios variables used in external commands
     #
 
+    # Nagios variable used in external command
     attr_accessor :host_name, :sticky, :notify, :persistent, :author,
     :comment, :service_description, :contact_name,
     :notification_timeperiod, :value, :varname, :varvalue,
