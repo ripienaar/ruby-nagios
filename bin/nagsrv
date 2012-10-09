@@ -77,7 +77,7 @@ OptionParser.new do |opts|
   end
 
   opts.on("--list-services", "List services that match certain criteria") do
-    listhosts = true
+    listservices = true
   end
 
   opts.separator ""
@@ -139,6 +139,10 @@ nagios.parsestatus(statusfile)
 if listhosts
   action = "${host}" if action == nil
   forhost = "/." if forhost.size == 0
+end
+
+if listservices && action == nil
+  action = "${service}"
 end
 
 options = {:forhost => forhost, :notifyenabled => notify, :action => action, :withservice => withservice}
