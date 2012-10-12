@@ -70,6 +70,7 @@ module Nagios
       notifications = options.fetch(:notifyenabled, nil)
       action = options.fetch(:action, nil)
       withservice = options.fetch(:withservice, [])
+      acknowledged = options.fetch(:acknowledged, nil)
 
       services = []
       searchquery = []
@@ -85,6 +86,7 @@ module Nagios
       end
 
       searchquery << {"notifications_enabled" => notifications.to_s} if notifications
+      searchquery << {"problem_has_been_acknowledged" => acknowledged.to_s} if acknowledged
 
       svcs = find_with_properties(searchquery)
 
