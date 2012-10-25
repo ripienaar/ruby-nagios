@@ -78,7 +78,7 @@ Dmytro Kovalov, dmytro.kovalov@gmail.com
 Read objects.cache file and parse it.
 
 Method reads file by blocks. Each block defines one object, definition
-starts with 'define <type> {' and ends with '}'. Each block has a
+starts with 'define <type> !{' and ends with '}'. Each block has a
 '<type>_name' line which defines name of the instance of the
 object. 
 
