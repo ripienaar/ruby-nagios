@@ -143,7 +143,8 @@ parsing. Same property can be accessed either using Hash @objects
     # @param [Symbol] resource Resource to search from: :host, :hostgroup, etc.
     # @param [Symbol] attribute Attribute to use in search. For example, find host by hostname or address, etc. anything that's defined for this resource
     # @param [Symbol] message  Is either 'find' or 'find_all' passed from caller. In case of 'find' returns 1 hash, 'find_all' - Array of Hash'es.
-    # @param [String] or [Regexp] pattern Search pattern
+    #
+    # @param [String, Regexp] pattern Search pattern
     
     def find resource, message, attribute, pattern
       self.send(resource.to_sym).values.send(message) do |a| 
@@ -166,9 +167,9 @@ parsing. Same property can be accessed either using Hash @objects
     # @param [Symbol] sym Should be in the form
     #     find(_all)?_<resource>_by_<attribute>. Similar to
     #     ActiveResource find_* dynamic methods. Depending on the name
-    #     of the mthod called (find or find_all) will pass message to
-    #     self.find method, that will call {Array.find} or
-    #     {Array.find_all} accordingly.
+    #     of the method called (find or find_all) will pass message to
+    #     self.find method, that will call Array#find or
+    #     Array.find_all accordingly.
     #
     # find_*_by and find_all_*. find_all returns Array of
     # hashes. 
