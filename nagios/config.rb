@@ -71,10 +71,11 @@ first one will be used. For example, Debian can have both Nagios 2 and
     #
     # @author Dmytro Kovalov, dmytro.kovalov@gmail.com
     def parse
-
-      File.readlines(@config).map{ |l| l.sub(/#.*$/,'')}.delete_if { |l| l=~ /^$/}.each do |l|
-        key,val = l.strip.split('=',2)
-        raise "Incorrect configuration line #{l}" unless key && val
+      idx=0
+      File.readlines(@config).map{ |l| l.sub(/\s*#.*$/,'')}.delete_if { |l| l=~ /^\s*$/}.each do |l|
+        idx += 1
+        key,val = l.chomp.strip.split(/\s*=\s*/,2)
+        raise "Incorrect configuration line ##{idx}: '#{l}'" unless key && val
 
         case key
           # There could be multiple entries for cfg_dir/file, so these
