@@ -1,0 +1,151 @@
+#!/usr/bin/env ruby
+
+# A tool to do mass operations on nagios services.  It is intended to be run on
+# the server that hosts nagios and it needs read access to the status.log file
+# typically found in the var dir.
+#
+# Command options are broken up into several types:
+#
+# == General
+# --statusfile
+#   Where to find the status file
+#
+# == Output Selectors
+# --list-hosts
+#   List hostnames that match certain criteria
+#
+# --list-service
+#   List services that match certain criteria
+#
+# == Selectors
+# --with-service
+#   Pass a specific service name or a regex in the form
+#   /pattern/ if you pass a regex you can only pass this
+#   option once, if you pass specific services you can
+#   use this option many times the services will be searches
+#   in an OR fasion
+#
+# --for-host
+#   Restrict the selection of services to a specific host or
+#   regex match of hosts, same regex rules as for --with-service
+#
+# --notify-enabled
+#   List only services with notifications enabled, in this mode
+#   the output will be in the form host:service
+#
+# == Actions
+# --enable-notify / --disable-notify
+#   Enable or Disable notifications for selected services
+#
+# --enable-checks / --disable-checks
+#   Enable of Disable checks for selected services
+#
+# --force-check
+#   Force checks for selected services
+#
+# --acknowledge
+#   Ackknowledge services without sending notifies
+#
+# Released under the terms of the Apache version 2
+# license
+#
+# Please open an issue at ruby-nagios.googlecode.com
+# with any queries
+
+require 'nagios'
+require 'optparse'
+
+statusfile = "status.log"
+listhosts = false
+withservice = []
+listservices = false
+forhost = []
+notify = nil
+action = nil
+options = nil
+
+OptionParser.new do |opts|
+  opts.separator "General Options"
+  opts.on("--statusfile FILE", "-s", "Path to the Nagios status.log") do |v|
+    statusfile = v
+  end
+
+  opts.separator ""
+  opts.separator "Output Selectors"
+  opts.on("--list-hosts", "List hostnames that match certain criteria") do
+    listhosts = true
+  end
+
+  opts.on("--list-services", "List services that match certain criteria") do
+    listservices = true
+  end
+
+  opts.separator ""
+  opts.separator "Service and Host Selectors"
+
+  opts.on("--with-service SERVICE", "Match a service or regular expression") do |v|
+    withservice << v
+  end
+
+  opts.on("--for-host HOST", "Restrict selection of services to a specific host") do |v|
+    forhost << v
+  end
+
+  opts.on("--notify-enabled", "List only services with notification enabled") do
+    notify = 1
+  end
+
+  opts.on("--notify-disabled", "List only services with notification disabled") do
+    notify = 0
+  end
+
+  opts.separator ""
+  opts.separator "Actions for Matched Services/Hosts"
+  opts.on("--enable-notify", "Enable notifications for selected services") do
+    action = "[${tstamp}] ENABLE_SVC_NOTIFICATIONS;${host};${service}"
+  end
+
+  opts.on("--disable-notify", "Disable notifications for selected services") do
+    action = "[${tstamp}] DISABLE_SVC_NOTIFICATIONS;${host};${service}"
+  end
+
+  opts.on("--enable-checks", "Enable checks for selected services") do
+    action = "[${tstamp}] ENABLE_SVC_CHECK;${host};${service};${tstamp}"
+  end
+
+  opts.on("--disable-checks", "Disable checks for selected services") do
+    action = "[${tstamp}] DISABLE_SVC_CHECK;${host};${service};${tstamp}"
+  end
+
+  opts.on("--force-check", "Force checks for selected services") do
+    action = "[${tstamp}] SCHEDULE_FORCED_SVC_CHECK;${host};${service};${tstamp}"
+  end
+
+  opts.on("--ackknowledge", "Ackknowledge services without sending notifies") do
+    action = "[${tstamp}] ACKNOWLEDGE_SVC_PROBLEM;${host};${service};1;0;1;#{ENV['USER']};Acknowledged from CLI"
+  end
+end.parse!
+
+abort "Cannot find #{statusfile}" unless File.exist?(statusfile)
+
+nagios = Nagios::Status.new
+
+nagios.parsestatus(statusfile)
+
+
+# We want hosts so abuse the action field to print just the hostname
+# and select all hosts unless other action/forhost was desigred then
+# this really is just a noop and it reverts to noral behaviour
+if listhosts
+  action = "${host}" if action == nil
+  forhost = "/." if forhost.size == 0
+end
+
+if listservices && action == nil
+  action = "${service}"
+end
+
+options = {:forhost => forhost, :notifyenabled => notify, :action => action, :withservice => withservice}
+services = nagios.find_services(options)
+
+puts services.join("\n")

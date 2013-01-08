@@ -1,5 +1,0 @@
-Have you ever had to disable alerts, retry a check or acknowledge outages on a large amount of services with Nagios and hated the web UI for it?
-
-This is a CLI tool and Ruby library that parses your status log file and let you query it for information or create external commands to be piped into the nagios command file.
-
-See http://code.google.com/p/ruby-nagios/ for more information
