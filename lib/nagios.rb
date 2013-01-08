@@ -1,4 +1,4 @@
-require '../config/default'
+require File.dirname(__FILE__) + '/../config/default.rb'
 require 'nagios/config'
 require 'nagios/external_commands'
 require 'nagios/objects'
