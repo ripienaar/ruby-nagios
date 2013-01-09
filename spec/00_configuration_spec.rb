@@ -3,8 +3,6 @@ require_relative 'spec_helper'
 
 describe "Configuration" do 
 
-#  set :environment, ENV['RACK_ENV'] || :test
-
   before { 
     @cfg = Nagios::Config.new ::TEST[:nagios_cfg]
   }
