@@ -60,14 +60,14 @@ Dmytro Kovalov, dmytro.kovalov@gmail.com
     # @param [String] path UNIX path to the objects.cache file
     # @see Nagios::Objects.parse
     def initialize path
-      raise "File does not exist" unless File.exist? path
-      raise "File is not readable" unless File.readable? path
-      @objects_file = path
+      raise "File #{path} does not exist" unless File.exist? path
+      raise "File #{path} is not readable" unless File.readable? path
+      @path = path
       @objects = {}
     end
  
     # PATH to the objects.cache file
-    attr_accessor :objects_file
+    attr_accessor :path
 
     # Parsed objects
     attr_accessor :objects
@@ -78,7 +78,7 @@ Dmytro Kovalov, dmytro.kovalov@gmail.com
 Read objects.cache file and parse it.
 
 Method reads file by blocks. Each block defines one object, definition
-starts with 'define <type> {' and ends with '}'. Each block has a
+starts with 'define <type> !{' and ends with '}'. Each block has a
 '<type>_name' line which defines name of the instance of the
 object. 
 
@@ -110,7 +110,7 @@ parsing. Same property can be accessed either using Hash @objects
 =end
     def parse
       block = {}
-      content = File.readlines objects_file
+      content = File.readlines path
       handler = nil
       content.each do |line|
         case
@@ -143,7 +143,8 @@ parsing. Same property can be accessed either using Hash @objects
     # @param [Symbol] resource Resource to search from: :host, :hostgroup, etc.
     # @param [Symbol] attribute Attribute to use in search. For example, find host by hostname or address, etc. anything that's defined for this resource
     # @param [Symbol] message  Is either 'find' or 'find_all' passed from caller. In case of 'find' returns 1 hash, 'find_all' - Array of Hash'es.
-    # @param [String] or [Regexp] pattern Search pattern
+    #
+    # @param [String, Regexp] pattern Search pattern
     
     def find resource, message, attribute, pattern
       self.send(resource.to_sym).values.send(message) do |a| 
@@ -166,9 +167,9 @@ parsing. Same property can be accessed either using Hash @objects
     # @param [Symbol] sym Should be in the form
     #     find(_all)?_<resource>_by_<attribute>. Similar to
     #     ActiveResource find_* dynamic methods. Depending on the name
-    #     of the mthod called (find or find_all) will pass message to
-    #     self.find method, that will call {Array.find} or
-    #     {Array.find_all} accordingly.
+    #     of the method called (find or find_all) will pass message to
+    #     self.find method, that will call Array#find or
+    #     Array.find_all accordingly.
     #
     # find_*_by and find_all_*. find_all returns Array of
     # hashes. 

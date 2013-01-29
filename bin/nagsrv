@@ -128,9 +128,9 @@ end.parse!
 
 abort "Cannot find #{statusfile}" unless File.exist?(statusfile)
 
-nagios = Nagios::Status.new
+nagios = Nagios::Status.new statusfile
 
-nagios.parsestatus(statusfile)
+nagios.parsestatus
 
 
 # We want hosts so abuse the action field to print just the hostname
