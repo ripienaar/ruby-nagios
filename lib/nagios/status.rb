@@ -3,11 +3,13 @@ module Nagios
     attr_reader :status, :path
 
 
-    def initialize(statusfile)
-      raise ArgumentError, "Statusfile file name must be provided" unless statusfile    
-      raise RuntimeError, "Statusfile #{statusfile} does not exist" unless File.exist? statusfile
-      raise RuntimeError, "Statusfile #{statusfile} is not readable" unless File.readable? statusfile
-      @path = statusfile
+    def initialize(statusfile=nil)
+      if statusfile
+        raise ArgumentError, "Statusfile file name must be provided" unless statusfile    
+        raise RuntimeError, "Statusfile #{statusfile} does not exist" unless File.exist? statusfile
+        raise RuntimeError, "Statusfile #{statusfile} is not readable" unless File.readable? statusfile
+        @path = statusfile
+      end
       @status = {}
       @status["hosts"] = {}
 
@@ -15,12 +17,15 @@ module Nagios
     end
 
     # Parses a nagios status file returning a data structure for all the data
-    def parsestatus
+    def parsestatus path=nil
+
+      path ||= @path
+      raise ArgumentError, "Statusfile file name must be provided either in constructor or as argument to parse mathod" unless path
 
       handler = ""
       blocklines = []
 
-      File.readlines(@path).each do |line|
+      File.readlines(path).each do |line|
 
         # start of new sections
         if line =~ /(\w+) \{/

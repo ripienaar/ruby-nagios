@@ -34,14 +34,32 @@ describe "Configuration" do
     before { @cfg.parse }
     
     context Nagios::Status do
-      
-      subject { Nagios::Status.new( ::TEST[:status_file]  || @cfg.status_file ) }
 
-      it { File.should exist( subject.path ) }
-      
-      it "should be parseable" do
-        lambda { subject.parse }.should_not raise_error
+      context "OOP style" do
+        subject { Nagios::Status.new( ::TEST[:status_file]  || @cfg.status_file ) }
+        
+        it { File.should exist( subject.path ) }
+        
+        it "should be parseable" do
+          lambda { subject.parse }.should_not raise_error
+        end
       end
+
+      context "using parameter for parse method" do
+        subject { Nagios::Status.new() }
+        
+        it { File.should exist( (::TEST[:status_file]  || @cfg.status_file) ) }
+        
+        it "should be parseable" do
+          lambda { subject.parse(::TEST[:status_file]  || @cfg.status_file) }.should_not raise_error
+        end
+
+        it "should fail without a filename" do
+          lambda { subject.parse() }.should raise_error
+        end
+
+      end
+
     end # Nagios::Status
 
 
