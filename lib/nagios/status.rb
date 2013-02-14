@@ -19,7 +19,7 @@ module Nagios
     def parsestatus path=nil
 
       path ||= @path
-      raise ArgumentError, "Statusfile file name must be provided either in constructor or as argument to parse mathod" unless path
+      raise ArgumentError, "Statusfile file name must be provided either in constructor or as argument to parsestatus method" unless path
 
       @status, handler, blocklines = {'hosts' => {}}, '', []
 
