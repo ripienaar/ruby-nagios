@@ -23,12 +23,12 @@ class Nagios::Status::Model
 
   def initialize(path)
     @path = path
-    @status = Nagios::Status.new
+    @status = Nagios::Status.new @path
     update
   end # def initialize
 
   def update
-    @status.parsestatus(@path)
+    @status.parsestatus
   end # def update
 
   def services(service_pattern=nil, host_pattern=nil)
