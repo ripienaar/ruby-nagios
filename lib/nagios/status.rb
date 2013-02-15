@@ -10,8 +10,7 @@ module Nagios
         raise RuntimeError, "Statusfile #{statusfile} is not readable" unless File.readable? statusfile
         @path = statusfile
       end
-      @status = {}
-      @status["hosts"] = {}
+      @status = {'hosts' => { }}
 
       self
     end
@@ -20,10 +19,9 @@ module Nagios
     def parsestatus path=nil
 
       path ||= @path
-      raise ArgumentError, "Statusfile file name must be provided either in constructor or as argument to parse mathod" unless path
+      raise ArgumentError, "Statusfile file name must be provided either in constructor or as argument to parsestatus method" unless path
 
-      handler = ""
-      blocklines = []
+      @status, handler, blocklines = {'hosts' => {}}, '', []
 
       File.readlines(path).each do |line|
 
