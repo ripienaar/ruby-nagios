@@ -160,6 +160,14 @@ def main(args)
     end # if results[state]
   end # for each non-OK state
 
+  # If everything is OK, still print detailed output for confirmation
+  if total_results == 0 and results["OK"].size > 0
+      puts "OK Services:"
+      results["OK"].sort { |a,b| a["host_name"] <=> b["host_name"] }.each do |service|
+        puts "  #{service["host_name"]} => #{service["service_description"]}"
+      end
+  end
+
   exitcode = 0
 
   if settings.down_min_percent
