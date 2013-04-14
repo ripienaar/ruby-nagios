@@ -155,7 +155,7 @@ def main(args)
       puts "Services in #{state}:"
       results[state].sort { |a,b| a["host_name"] <=> b["host_name"] }.each do |service|
         total_results += 1
-        puts "  #{service["host_name"]} => #{service["service_description"]}"
+        puts "  #{service["host_name"]} => #{service["service_description"]} (#{service["plugin_output"]})"
       end
     end # if results[state]
   end # for each non-OK state
