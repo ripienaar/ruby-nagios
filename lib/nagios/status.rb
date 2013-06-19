@@ -89,6 +89,7 @@ module Nagios
       withservice = options.fetch(:withservice, [])
       acknowledged = options.fetch(:acknowledged, nil)
       passive = options.fetch(:passive, nil)
+      current_state = options.fetch(:current_state, nil)
 
       services = []
       searchquery = []
@@ -103,6 +104,7 @@ module Nagios
         searchquery << search_term("service_description", s)
       end
 
+      searchquery << {"current_state" => current_state } if current_state
       searchquery << {"notifications_enabled" => notifications.to_s} if notifications
       searchquery << {"problem_has_been_acknowledged" => acknowledged.to_s} if acknowledged
       if passive

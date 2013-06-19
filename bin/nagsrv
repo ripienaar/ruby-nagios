@@ -46,6 +46,9 @@
 # --acknowledge
 #   Ackknowledge services without sending notifies
 #
+# --delete-comments
+#   Delete the comments for selected services
+#
 # Released under the terms of the Apache version 2
 # license
 #
@@ -63,6 +66,7 @@ forhost = []
 notify = nil
 action = nil
 options = nil
+current_state = nil
 
 OptionParser.new do |opts|
   opts.separator "General Options"
@@ -89,6 +93,21 @@ OptionParser.new do |opts|
 
   opts.on("--for-host HOST", "Restrict selection of services to a specific host") do |v|
     forhost << v
+  end
+
+  opts.on("--critical", "List only services which are critical") do
+    raise("Cannot use --critical with --ok or --warning") unless current_state.nil?
+    current_state = 2
+  end
+
+  opts.on("--warning", "List only services which are warning") do
+    raise("Cannot use --warning with --critical or --ok") unless current_state.nil?
+    current_state = 1
+  end
+
+  opts.on("--ok", "List only services which are ok") do
+    raise("Cannot use --ok with --critical or --warning") unless current_state.nil?
+    current_state = 0
   end
 
   opts.on("--notify-enabled", "List only services with notification enabled") do
@@ -124,6 +143,12 @@ OptionParser.new do |opts|
   opts.on("--ackknowledge", "Ackknowledge services without sending notifies") do
     action = "[${tstamp}] ACKNOWLEDGE_SVC_PROBLEM;${host};${service};1;0;1;#{ENV['USER']};Acknowledged from CLI"
   end
+
+  opts.on("--delete-comments", "") do
+    comment_id = 1
+    action = "[${tstamp}] DEL_SVC_COMMENT;${comment_id};${tstamp}"
+  end
+
 end.parse!
 
 abort "Cannot find #{statusfile}" unless File.exist?(statusfile)
@@ -145,7 +170,7 @@ if listservices && action == nil
   action = "${service}"
 end
 
-options = {:forhost => forhost, :notifyenabled => notify, :action => action, :withservice => withservice}
+options = {:forhost => forhost, :notifyenabled => notify, :action => action, :withservice => withservice, :current_state => current_state}
 services = nagios.find_services(options)
 
 puts services.join("\n")
