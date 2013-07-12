@@ -133,6 +133,7 @@ module Nagios
         end
         
         output << { data: params, result: messages.empty? , messages: messages }
+        result &&= messages.empty?
       end # data.each
 
       { result: result, data: output }
