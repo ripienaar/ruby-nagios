@@ -78,7 +78,7 @@ class Nagios::Status::Model
 
 end # class Nagios::Status::Model
 
-Settings = Struct.new(:nagios_cfg, :status_path, :service_pattern, :host_pattern, :down_min_percent)
+Settings = Struct.new(:nagios_cfg, :status_path, :service_pattern, :host_pattern, :percent_critical, :percent_warning, :percent_unknown, :show_ok)
 def main(args)
   progname = File.basename($0)
   settings = Settings.new
@@ -102,9 +102,23 @@ def main(args)
       settings.host_pattern = val
     end
 
-    opts.on("-p NUM", "--percent NUM",
-            "Only alert if this percentage of the cluster is down") do |val|
-      settings.down_min_percent = Float(val)
+    opts.on( "--percent-warning NUM",
+            "Only alert if this percentage of the cluster is in warning state") do |val|
+      settings.percent_warning = Float(val)
+    end
+
+    opts.on( "--percent-critical NUM",
+            "Only alert if this percentage of the cluster is in critical state") do |val|
+      settings.percent_critical = Float(val)
+    end
+
+    opts.on( "--percent-unknown NUM",
+            "Only alert if this percentage of the cluster is in unknown state") do |val|
+      settings.percent_unknown = Float(val)
+    end
+
+    opts.on( "--show-ok", "Show details for checks in OK state too") do
+      settings.show_ok = true
     end
   end # OptionParser.new
 
@@ -148,44 +162,45 @@ def main(args)
   print "hosts=/#{settings.host_pattern}/ "
   puts
 
+  total_results = ["OK", "WARNING", "CRITICAL", "UNKNOWN"].inject(0) {|aggr,state| aggr += results[state].length}
+
   # More data output
-  total_results = 0.0
   ["WARNING", "CRITICAL", "UNKNOWN"].each do |state|
     if results[state] && results[state].size > 0
       puts "Services in #{state}:"
       results[state].sort { |a,b| a["host_name"] <=> b["host_name"] }.each do |service|
-        total_results += 1
         puts "  #{service["host_name"]} => #{service["service_description"]} (#{service["plugin_output"]})"
       end
     end # if results[state]
   end # for each non-OK state
 
-  # If everything is OK, still print detailed output for confirmation
-  if total_results == 0 and results["OK"].size > 0
-      puts "OK Services:"
-      results["OK"].sort { |a,b| a["host_name"] <=> b["host_name"] }.each do |service|
-        puts "  #{service["host_name"]} => #{service["service_description"]}"
-      end
+  if settings.show_ok and results["OK"].size > 0
+    puts "OK Services:"
+    results["OK"].sort { |a,b| a["host_name"] <=> b["host_name"] }.each do |service|
+      puts "  #{service["host_name"]} => #{service["service_description"]}"
+    end
   end
 
   exitcode = 0
 
-  if settings.down_min_percent
-      if results["WARNING"].length > 0 && (results["WARNING"].length / total_results) * 100 >= settings.down_min_percent
-          exitcode = 1
-      end
-      if results["CRITICAL"].length > 0 && (results["CRITICAL"].length / total_results) * 100 >= settings.down_min_percent
-          exitcode = 2
-      end
+  if settings.percent_unknown
+    exitcode = 3 if results["UNKNOWN"].length > 0 && (results["UNKNOWN"].length.to_f / total_results) * 100 >= settings.percent_unknown
   else
-    if results["WARNING"].length > 0
-      exitcode = 1
-    end
-
-    if results["CRITICAL"].length > 0
-      exitcode = 2
-    end
+    exitcode = 3 if results["UNKNOWN"].length > 0
   end
+
+  if settings.percent_warning
+    exitcode = 1 if results["WARNING"].length > 0 && ((results["WARNING"].length.to_f + results["CRITICAL"].length.to_f) / total_results) * 100 >= settings.percent_warning
+  else
+    exitcode = 1 if results["WARNING"].length > 0
+  end
+
+  if settings.percent_critical
+    exitcode = 2 if results["CRITICAL"].length > 0 && (results["CRITICAL"].length.to_f / total_results) * 100 >= settings.percent_critical
+  else
+    exitcode = 2 if results["CRITICAL"].length > 0
+  end
+
   return exitcode
 end
 
