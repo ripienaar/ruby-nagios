@@ -21,7 +21,7 @@ module Nagios
   class ExternalCommands
 
     require 'erb'
-    require_relative 'external_commands/list'
+    require 'nagios/external_commands/list'
 
     # Constructor for the external command write class.
     #
@@ -132,11 +132,11 @@ module Nagios
           end
         end
         
-        output << { data: params, result: messages.empty? , messages: messages }
+        output << { :data => params, :result => messages.empty? , :messages => messages }
         result &&= messages.empty?
       end # data.each
 
-      { result: result, data: output }
+      { :result => result, :data => output }
     end # def write
   end
 end
