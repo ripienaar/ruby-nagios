@@ -23,7 +23,7 @@ module Nagios
 
       @status, handler, blocklines = {'hosts' => {}}, '', []
 
-      File.readlines(path).each do |line|
+      File.readlines(path, :encoding => 'iso-8859-1').each do |line|
 
         # start of new sections
         if line =~ /(\w+) \{/
