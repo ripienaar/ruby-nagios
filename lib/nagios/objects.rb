@@ -101,6 +101,17 @@ Example of a parsed object:
     nagios.contactgroup
     => {"admins"=>{:contactgroup_name=>"admins", :alias=>"Nagios Administrators", :members=>"root"}}
 
+Services are a bit different from other objects, since they are
+related to hosts, all host's services are nested under hostname, as:
+
+    nagios.service =>
+       {"airport"=>
+          {"PING"=>
+            { :host_name=>"airport",
+              :service_description=>"PING",
+
+
+
 === Convenience methods
 
 Method parse creates helper methods for every type of object after
@@ -124,7 +135,18 @@ parsing. Same property can be accessed either using Hash @objects
           # Process it. Each block type has line <type>_name in the definition: host_name, command_name
           #
           @objects[handler] ||= {}
-          @objects[handler][block["#{handler.to_s}_name".to_sym]] = block 
+          case handler
+          when :service
+            #
+            # Service has service_description,  not name. Nest service
+            # hashes under hostnames.
+            #
+            next unless block[:host_name]
+            @objects[handler][block[:host_name]] ||= { }
+            @objects[handler][block[:host_name]][block["#{handler.to_s}_description".to_sym]] = block 
+          else
+            @objects[handler][block["#{handler.to_s}_name".to_sym]] = block 
+          end
           block = { }
        when line =~ /^\s*(\w+)\s+([^\{\}]+)$/  # Build Hash from key-value pairs like: "max_check_attempts      10"
           block[$1.to_sym] = $2.strip
@@ -187,4 +209,5 @@ parsing. Same property can be accessed either using Hash @objects
 
   end
 end
+
 
