@@ -88,7 +88,7 @@ first one will be used. For example, Debian can have both Nagios 2 and
 
           @configuration[key] = val
           instance_variable_set("@#{key}", val)
-          instance_eval val =~ /^[\d\.-]+/ ? 
+          instance_eval val =~ /^[\d\.-]+$/ ? 
           "def #{key}; return #{val}; end" :
             "def #{key}; return %Q{#{val}}; end"
         end
