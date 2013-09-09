@@ -169,7 +169,12 @@ def main(args)
     if results[state] && results[state].size > 0
       puts "Services in #{state}:"
       results[state].sort { |a,b| a["host_name"] <=> b["host_name"] }.each do |service|
-        puts "  #{service["host_name"]} => #{service["service_description"]} (#{service["plugin_output"]})"
+        if service["long_plugin_output"] and !service["long_plugin_output"].empty?
+          puts "  #{service["host_name"]} => #{service["service_description"]} (#{service["plugin_output"]})"
+          puts "  #{service["long_plugin_output"]}"
+        else
+          puts "  #{service["host_name"]} => #{service["service_description"]} (#{service["plugin_output"]})"
+        end
       end
     end # if results[state]
   end # for each non-OK state
