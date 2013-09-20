@@ -193,14 +193,14 @@ module Nagios
 
     # Figures out the service name from a block in a nagios status file
     def get_service_name(lines)
-      if s = lines.grep(/\s+service_description=(\w+)/).first
+      if s = lines.grep(/\s+service_description=(\S+)/).first
         if s =~ /service_description=(.+)$/
           service = $1
         else
           raise("Cant't parse service in block: #{s}")
         end
       else
-        raise("Cant't find a hostname in block")
+        raise("Cant't find a service in block")
       end
 
       service
