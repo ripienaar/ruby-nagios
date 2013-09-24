@@ -75,7 +75,7 @@ module Nagios
       hsts.each do |host|
         host_name = host["host_name"]
 
-        hosts << parse_command_template(action, host_name, "", host_name)
+        hosts << parse_command_template(action, host, host_name)
       end
 
       hosts.uniq.sort
@@ -123,7 +123,7 @@ module Nagios
         # action option to get this result
         action = "${host}:${service}" if (notifications != nil && action == nil)
 
-        services << parse_command_template(action, host_name, service_description, service_description)
+        services << parse_command_template(action, service, service_description)
       end
 
       services.uniq.sort
@@ -183,11 +183,15 @@ module Nagios
 
     # Parses a template given with a nagios command string and populates vars
     # else return the string given in default
-    def parse_command_template(template, host, service, default)
+    def parse_command_template(template, block, default)
       if template.nil?
         default
       else
-        template.gsub(/\$\{host\}/, host).gsub(/\$\{service\}/, service).gsub(/\$\{tstamp\}/, Time.now.to_i.to_s)
+        # Support old variable names
+        s = template.gsub(/\$\{host\}/, block['host_name']).gsub(/\$\{service\}/, block['service_description']).gsub(/\$\{tstamp\}/, Time.now.to_i.to_s)
+
+        # Extract all other variables
+        s.gsub(/\$\{([\w]+)\}/) {|m| block[m.match(/\w+/)[0]]}
       end
     end
 
