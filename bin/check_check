@@ -58,8 +58,8 @@ class Nagios::Status::Model
           # in a soft state transition.
         end
 
-        # TODO(sissel): Maybe also skip checks that are 'acknowledged'
-        matches << status
+        # Add status but not if the checks have been 'acknowledged'
+        matches << status if !status["problem_has_been_acknowledged"] = "1"
       end
     end # hosts().each
     return matches
