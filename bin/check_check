@@ -59,7 +59,7 @@ class Nagios::Status::Model
         end
 
         # Add status but not if the checks have been 'acknowledged'
-        matches << status if status["problem_has_been_acknowledged"] = "0"
+        matches << status if status["problem_has_been_acknowledged"] == "0"
       end
     end # hosts().each
     return matches
