@@ -78,7 +78,7 @@ class Nagios::Status::Model
 
 end # class Nagios::Status::Model
 
-Settings = Struct.new(:nagios_cfg, :status_path, :service_pattern, :host_pattern, :percent_critical, :percent_warning, :percent_unknown, :show_ok)
+Settings = Struct.new(:nagios_cfg, :status_path, :service_pattern, :host_pattern, :percent_critical, :percent_warning, :percent_unknown, :show_ok, :quiet)
 def main(args)
   progname = File.basename($0)
   settings = Settings.new
@@ -119,6 +119,9 @@ def main(args)
 
     opts.on( "--show-ok", "Show details for checks in OK state too") do
       settings.show_ok = true
+    end
+    opts.on( "--quiet", "Quiet output") do
+      settings.quiet = true
     end
   end # OptionParser.new
 
@@ -165,19 +168,21 @@ def main(args)
   total_results = ["OK", "WARNING", "CRITICAL", "UNKNOWN"].inject(0) {|aggr,state| aggr += results[state].length}
 
   # More data output
-  ["WARNING", "CRITICAL", "UNKNOWN"].each do |state|
-    if results[state] && results[state].size > 0
-      puts "Services in #{state}:"
-      results[state].sort { |a,b| a["host_name"] <=> b["host_name"] }.each do |service|
-        if service["long_plugin_output"] and !service["long_plugin_output"].empty?
-          puts "  #{service["host_name"]} => #{service["service_description"]} (#{service["plugin_output"]})"
-          puts "  #{service["long_plugin_output"]}"
-        else
-          puts "  #{service["host_name"]} => #{service["service_description"]} (#{service["plugin_output"]})"
+  if !settings.quiet
+    ["WARNING", "CRITICAL", "UNKNOWN"].each do |state|
+      if results[state] && results[state].size > 0
+        puts "Services in #{state}:"
+        results[state].sort { |a,b| a["host_name"] <=> b["host_name"] }.each do |service|
+          if service["long_plugin_output"] and !service["long_plugin_output"].empty?
+            puts "  #{service["host_name"]} => #{service["service_description"]} (#{service["plugin_output"]})"
+            puts "  #{service["long_plugin_output"]}"
+          else
+            puts "  #{service["host_name"]} => #{service["service_description"]} (#{service["plugin_output"]})"
+          end
         end
-      end
-    end # if results[state]
-  end # for each non-OK state
+      end # if results[state]
+    end # for each non-OK state
+  end # for !quiet
 
   if settings.show_ok and results["OK"].size > 0
     puts "OK Services:"
