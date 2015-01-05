@@ -78,7 +78,7 @@ class Nagios::Status::Model
 
 end # class Nagios::Status::Model
 
-Settings = Struct.new(:nagios_cfg, :status_path, :service_pattern, :host_pattern, :percent_critical, :percent_warning, :percent_unknown, :show_ok, :quiet)
+Settings = Struct.new(:nagios_cfg, :status_path, :service_pattern, :host_pattern, :percent_critical, :percent_warning, :percent_unknown, :show_ok, :quiet, :aggr)
 def main(args)
   progname = File.basename($0)
   settings = Settings.new
@@ -123,6 +123,9 @@ def main(args)
     opts.on( "--quiet", "Quiet output") do
       settings.quiet = true
     end
+    opts.on( "--aggr", "Aggregate states") do
+      settings.aggr = true
+    end
   end # OptionParser.new
 
   opts.parse!(args)
@@ -157,15 +160,17 @@ def main(args)
     results[state] << service_status
   end
 
+  total_results = ["OK", "WARNING", "CRITICAL", "UNKNOWN"].inject(0) {|aggr,state| aggr += results[state].length}
   # Output a summary line
   ["OK", "WARNING", "CRITICAL", "UNKNOWN"].each do | state|
     print "#{state}=#{results[state].length} "
   end
   print "services=/#{settings.service_pattern}/ "
   print "hosts=/#{settings.host_pattern}/ "
+  if settings.aggr
+      print "Problems: #{((results["UNKNOWN"].length + results["WARNING"].length + results["CRITICAL"].length).to_f / total_results) * 100}% "
+  end
   puts
-
-  total_results = ["OK", "WARNING", "CRITICAL", "UNKNOWN"].inject(0) {|aggr,state| aggr += results[state].length}
 
   # More data output
   if !settings.quiet
@@ -193,22 +198,40 @@ def main(args)
 
   exitcode = 0
 
-  if settings.percent_unknown
-    exitcode = 3 if results["UNKNOWN"].length > 0 && (results["UNKNOWN"].length.to_f / total_results) * 100 >= settings.percent_unknown
-  else
-    exitcode = 3 if results["UNKNOWN"].length > 0
-  end
+  if !settings.aggr
+    if settings.percent_unknown
+      exitcode = 3 if results["UNKNOWN"].length > 0 && (results["UNKNOWN"].length.to_f / total_results) * 100 >= settings.percent_unknown
+    else
+      exitcode = 3 if results["UNKNOWN"].length > 0
+    end
 
-  if settings.percent_warning
-    exitcode = 1 if results["WARNING"].length > 0 && ((results["WARNING"].length.to_f + results["CRITICAL"].length.to_f) / total_results) * 100 >= settings.percent_warning
-  else
-    exitcode = 1 if results["WARNING"].length > 0
-  end
+    if settings.percent_warning
+      exitcode = 1 if results["WARNING"].length > 0 && ((results["WARNING"].length.to_f + results["CRITICAL"].length.to_f) / total_results) * 100 >= settings.percent_warning
+    else
+      exitcode = 1 if results["WARNING"].length > 0
+    end
 
-  if settings.percent_critical
-    exitcode = 2 if results["CRITICAL"].length > 0 && (results["CRITICAL"].length.to_f / total_results) * 100 >= settings.percent_critical
+    if settings.percent_critical
+      exitcode = 2 if results["CRITICAL"].length > 0 && (results["CRITICAL"].length.to_f / total_results) * 100 >= settings.percent_critical
+    else
+      exitcode = 2 if results["CRITICAL"].length > 0
+    end
   else
-    exitcode = 2 if results["CRITICAL"].length > 0
+    if settings.percent_unknown
+      exitcode = 3 if results["UNKNOWN"].length > 0 && (results["UNKNOWN"].length.to_f / total_results) * 100 >= settings.percent_unknown
+    else
+      exitcode = 3 if results["UNKNOWN"].length > 0
+    end
+    if settings.percent_warning
+      exitcode = 1 if ((results["UNKNOWN"].length + results["WARNING"].length + results["CRITICAL"].length).to_f / total_results) * 100 >= settings.percent_warning
+    else
+      exitcode = 1 if results["WARNING"].length > 0
+    end
+    if settings.percent_critical
+      exitcode = 2 if ((results["UNKNOWN"].length + results["WARNING"].length + results["CRITICAL"].length).to_f / total_results) * 100 >= settings.percent_critical
+    else
+      exitcode = 2 if results["CRITICAL"].length > 0
+    end
   end
 
   return exitcode
