@@ -44,7 +44,7 @@
 #   Force checks for selected services
 #
 # --acknowledge
-#   Ackknowledge services without sending notifies
+#   Acknowledge services without sending notifies
 #
 # --delete-comments
 #   Delete the comments for selected services
@@ -140,7 +140,7 @@ OptionParser.new do |opts|
     action = "[${tstamp}] SCHEDULE_FORCED_SVC_CHECK;${host};${service};${tstamp}"
   end
 
-  opts.on("--ackknowledge", "Ackknowledge services without sending notifies") do
+  opts.on("--acknowledge", "Acknowledge services without sending notifies") do
     action = "[${tstamp}] ACKNOWLEDGE_SVC_PROBLEM;${host};${service};1;0;1;#{ENV['USER']};Acknowledged from CLI"
   end
 
