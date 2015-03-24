@@ -9,10 +9,10 @@ describe "Configuration" do
 
   context "nagios.cfg" do
 
-    it { File.should exist @cfg.path }
+    it { expect(File).to exist @cfg.path }
     
     it "should be parseable" do
-      lambda { @cfg.parse }.should_not raise_error
+      expect { @cfg.parse }.not_to raise_error
     end
 
     context "parsing nagios.cfg file" do 
@@ -20,11 +20,11 @@ describe "Configuration" do
       before { @cfg.parse }
       
       it "should have PATH to objects file" do 
-        @cfg.object_cache_file.should be_a_kind_of String 
+        expect(@cfg.object_cache_file).to be_a_kind_of String
       end
       
       it "should have PATH to status file" do
-        @cfg.status_file.should be_a_kind_of String 
+        expect(@cfg.status_file).to be_a_kind_of String
       end
 
     end # parsing nagios.cfg file
@@ -38,24 +38,24 @@ describe "Configuration" do
       context "OOP style" do
         subject { Nagios::Status.new( ::TEST[:status_file]  || @cfg.status_file ) }
         
-        it { File.should exist( subject.path ) }
+        it { expect(File).to exist( subject.path ) }
         
         it "should be parseable" do
-          lambda { subject.parse }.should_not raise_error
+          expect { subject.parse }.not_to raise_error
         end
       end
 
       context "using parameter for parse method" do
         subject { Nagios::Status.new() }
         
-        it { File.should exist( (::TEST[:status_file]  || @cfg.status_file) ) }
+        it { expect(File).to exist( (::TEST[:status_file]  || @cfg.status_file) ) }
         
         it "should be parseable" do
-          lambda { subject.parse(::TEST[:status_file]  || @cfg.status_file) }.should_not raise_error
+          expect { subject.parse(::TEST[:status_file]  || @cfg.status_file) }.not_to raise_error
         end
 
         it "should fail without a filename" do
-          lambda { subject.parse() }.should raise_error
+          expect { subject.parse() }.to raise_error
         end
 
       end
@@ -67,10 +67,10 @@ describe "Configuration" do
 
       subject {  Nagios::Objects.new( ::TEST[:object_cache_file] || @cfg.object_cache_file) }
 
-      it { File.should exist subject.path }
+      it { expect(File).to exist subject.path }
       
       it "should be parseable" do
-        lambda { subject.parse }.should_not raise_error
+        expect { subject.parse }.not_to raise_error
       end
     end # Nagios::Objects
 
