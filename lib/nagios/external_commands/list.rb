@@ -38,7 +38,6 @@ module Nagios
       :CHANGE_GLOBAL_HOST_EVENT_HANDLER => %w{event_handler_command},
       :CHANGE_GLOBAL_SVC_EVENT_HANDLER => %w{event_handler_command},
       :CHANGE_HOST_CHECK_COMMAND => %w{host_name check_command},
-      :CHANGE_HOST_CHECK_TIMEPERIOD => %w{host_name check_timeperod},
       :CHANGE_HOST_CHECK_TIMEPERIOD => %w{host_name timeperiod},
       :CHANGE_HOST_EVENT_HANDLER => %w{host_name event_handler_command},
       :CHANGE_HOST_MODATTR => %w{host_name value},
