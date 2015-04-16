@@ -67,6 +67,8 @@ notify = nil
 action = nil
 options = nil
 current_state = nil
+json = nil
+details = nil
 
 OptionParser.new do |opts|
   opts.separator "General Options"
@@ -82,6 +84,15 @@ OptionParser.new do |opts|
 
   opts.on("--list-services", "List services that match certain criteria") do
     listservices = true
+  end
+
+  opts.on("--json", "Returns complete json data instead of service names only") do
+    json = true
+  end
+
+  opts.on("--details", "Include additional serivce details in output") do
+    details = true
+    raise("Cannot use --details wirh --json") unless json.nil?
   end
 
   opts.separator ""
@@ -170,7 +181,7 @@ if listservices && action == nil
   action = "${service}"
 end
 
-options = {:forhost => forhost, :notifyenabled => notify, :action => action, :withservice => withservice, :current_state => current_state}
+options = {:forhost => forhost, :notifyenabled => notify, :action => action, :withservice => withservice, :current_state => current_state, :json => json, :details => details}
 services = nagios.find_services(options)
 
 puts services.join("\n")
