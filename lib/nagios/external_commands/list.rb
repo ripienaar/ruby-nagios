@@ -158,7 +158,7 @@ module Nagios
       :SCHEDULE_SERVICEGROUP_HOST_DOWNTIME => %w{servicegroup_name start_time end_time fixed trigger_id duration author comment},
       :SCHEDULE_SERVICEGROUP_SVC_DOWNTIME => %w{servicegroup_name start_time end_time fixed trigger_id duration author comment},
       :SCHEDULE_SVC_CHECK => %w{host_name service_description check_time},
-      :SCHEDULE_SVC_DOWNTIME => %w{host_name service_desription start_time end_time fixed trigger_id duration author comment},
+      :SCHEDULE_SVC_DOWNTIME => %w{host_name service_description start_time end_time fixed trigger_id duration author comment},
       :SEND_CUSTOM_HOST_NOTIFICATION => %w{host_name options author comment},
       :SEND_CUSTOM_SVC_NOTIFICATION => %w{host_name service_description options author comment},
       :SET_HOST_NOTIFICATION_NUMBER => %w{host_name notification_number},

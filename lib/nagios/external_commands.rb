@@ -65,7 +65,7 @@ module Nagios
     :hostgroup_name, :servicegroup_name, :file_name, :delete,
     :status_code, :plugin_output, :return_code, :start_time,
     :end_time, :fixed, :trigger_id, :duration, :check_time,
-    :service_desription, :start_time, :options, :notification_number
+    :service_description, :start_time, :options, :notification_number
 
     # Get private binding to use with ERB bindings.
     def get_binding
