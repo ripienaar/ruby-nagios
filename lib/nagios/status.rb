@@ -2,10 +2,9 @@ module Nagios
   class Status
     attr_reader :status, :path
 
-
     def initialize(statusfile=nil)
       if statusfile
-        raise ArgumentError, "Statusfile file name must be provided" unless statusfile    
+        raise ArgumentError, "Statusfile file name must be provided" unless statusfile
         raise RuntimeError, "Statusfile #{statusfile} does not exist" unless File.exist? statusfile
         raise RuntimeError, "Statusfile #{statusfile} is not readable" unless File.readable? statusfile
         @path = statusfile
@@ -90,6 +89,8 @@ module Nagios
       acknowledged = options.fetch(:acknowledged, nil)
       passive = options.fetch(:passive, nil)
       current_state = options.fetch(:current_state, nil)
+      json = options.fetch(:json, false)
+      details = options.fetch(:details, false)
 
       services = []
       searchquery = []
@@ -126,7 +127,24 @@ module Nagios
         services << parse_command_template(action, host_name, service_description, service_description)
       end
 
-      services.uniq.sort
+      if json
+        [ "[", svcs.join(", \n").gsub("=>", ":"), "]" ]
+      elsif details
+        space = ' '*100
+        delim = ' '
+        state = ['OK', 'Warning', 'Critical', 'Unknown']
+        details = Array.new
+        svcs.each do |s|
+          details << (s['host_name'] + space)[0, 25] + delim \
+                   + (s['service_description'] + space)[0,35] + delim \
+                   + (state[s['current_state'].to_i].to_s + space)[0,8] + delim \
+                   + (s['plugin_output'] + space)[0,120]
+        end
+        details
+
+      else
+        services.uniq.sort
+      end
     end
 
     private
