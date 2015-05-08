@@ -1,6 +1,6 @@
 spec = Gem::Specification.new do |s|
   s.name = 'ruby-nagios'
-  s.version = "0.2.2"
+  s.version = "0.3.0"
   s.author = 'R.I.Pienaar'
   s.email = 'rip@devco.net'
   s.homepage = 'http://devco.net/'
