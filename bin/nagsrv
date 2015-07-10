@@ -46,6 +46,9 @@
 # --acknowledge
 #   Acknowledge services without sending notifies
 #
+# --delete-svc-acknowledgement
+#   Remove acknowledgement from a service.
+#
 # --delete-comments
 #   Delete the comments for selected services
 #
@@ -155,6 +158,10 @@ OptionParser.new do |opts|
     action = "[${tstamp}] ACKNOWLEDGE_SVC_PROBLEM;${host};${service};1;0;1;#{ENV['USER']};Acknowledged from CLI"
   end
 
+  opts.on("--delete-svc-acknowledgement", "Remove acks from services") do
+    action = "[${tstamp}] REMOVE_SVC_ACKNOWLEDGEMENT;${host};${service};1;0;1;#{ENV['USER']};Ack removed from CLI"
+  end
+  
   opts.on("--delete-comments", "") do
     comment_id = 1
     action = "[${tstamp}] DEL_SVC_COMMENT;${comment_id};${tstamp}"
