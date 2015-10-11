@@ -83,6 +83,10 @@ def main(args)
   progname = File.basename($0)
   settings = Settings.new
   settings.nagios_cfg = "/etc/nagios3/nagios.cfg" # debian/ubuntu default
+  # if nagios.cfg doesn't exist, look for icinga.cfg
+  if !File.exist?(settings.nagios_cfg)
+    settings.nagios_cfg = "/etc/icinga/icinga.cfg" # debian/ubuntu default
+  end
 
   opts = OptionParser.new do |opts|
     opts.banner = "Usage: #{progname} [options]"
