@@ -9,16 +9,16 @@
 # Also useful for business-view monitoring
 #
 
-require "rubygems"
-require "nagios/status"
-require "optparse"
+require 'rubygems'
+require 'nagios/status'
+require 'optparse'
 
 class Nagios::Status::Model
   STATEMAP = {
-    "0" => "OK",
-    "1" => "WARNING",
-    "2" => "CRITICAL",
-    "3" => "UNKNOWN",
+    '0' => 'OK',
+    '1' => 'WARNING',
+    '2' => 'CRITICAL',
+    '3' => 'UNKNOWN'
   }
 
   def initialize(path)
@@ -31,103 +31,102 @@ class Nagios::Status::Model
     @status.parsestatus
   end # def update
 
-  def services(service_pattern=nil, host_pattern=nil)
+  def services(service_pattern = nil, host_pattern = nil)
     matches = []
-    self.hosts(host_pattern).each do |host, hostinfo|
-      #Skip hosts if the host is down - obviously the services will be too, and we should already have alerted on the host.__
-      next if hostinfo["hoststatus"]["current_state"].to_i != 0
+    hosts(host_pattern).each do |_host, hostinfo|
+      # Skip hosts if the host is down - obviously the services will be too, and we should already have alerted on the host.__
+      next if hostinfo['hoststatus']['current_state'].to_i != 0
       # Skip hosts if there is no hostinfo (no services associated, etc).
-      next if hostinfo["servicestatus"].nil?
+      next if hostinfo['servicestatus'].nil?
       # Skip hosts if they are in scheduled downtime
-      next if hostinfo["hoststatus"]["scheduled_downtime_depth"].to_i > 0
-      hostinfo["servicestatus"].each do |name, status|
-        next if service_pattern and !service_pattern.match(name)
+      next if hostinfo['hoststatus']['scheduled_downtime_depth'].to_i > 0
+      hostinfo['servicestatus'].each do |name, status|
+        next if service_pattern && !service_pattern.match(name)
 
         # Skip myself, if we are a check running from nagios.
-        next if name == ENV["NAGIOS_SERVICEDESC"]
+        next if name == ENV['NAGIOS_SERVICEDESC']
 
         # Skip silenced or checks in scheduled downtime.
-        next if status["notifications_enabled"].to_i == 0
-        next if status["scheduled_downtime_depth"].to_i > 0
+        next if status['notifications_enabled'].to_i == 0
+        next if status['scheduled_downtime_depth'].to_i > 0
 
         # Only report checks that are in 'hard' state.
         # If not in hard state, report 'last_hard_state' instead.
-        if status["state_type"] != "1" # not in hard state
-          status["current_state"] = status["last_hard_state"]
+        if status['state_type'] != '1' # not in hard state
+          status['current_state'] = status['last_hard_state']
           # TODO(sissel): record that this service is currently
           # in a soft state transition.
         end
 
         # Add status but not if the checks have been 'acknowledged'
-        matches << status if status["problem_has_been_acknowledged"] == "0"
+        matches << status if status['problem_has_been_acknowledged'] == '0'
       end
     end # hosts().each
-    return matches
+    matches
   end # def services
 
-  def hosts(pattern=nil)
+  def hosts(pattern = nil)
     if pattern
-      return @status.status["hosts"].reject { |name,hostinfo| !pattern.match(name) }
+      return @status.status['hosts'].reject { |name, _hostinfo| !pattern.match(name) }
     else
-      return @status.status["hosts"]
+      return @status.status['hosts']
     end # if pattern
   end # def hosts
 
   # TODO(sissel): add a proper 'status' model that
   # has HostStatus, ServiceStatus, etc.
-
 end # class Nagios::Status::Model
 
 Settings = Struct.new(:nagios_cfg, :status_path, :service_pattern, :host_pattern, :percent_critical, :percent_warning, :percent_unknown, :show_ok, :quiet, :aggr)
 def main(args)
-  progname = File.basename($0)
+  progname = File.basename($PROGRAM_NAME)
   settings = Settings.new
-  settings.nagios_cfg = "/etc/nagios3/nagios.cfg" # debian/ubuntu default
+  settings.nagios_cfg = '/etc/nagios3/nagios.cfg' # debian/ubuntu default
   # if nagios.cfg doesn't exist, look for icinga.cfg
-  if !File.exist?(settings.nagios_cfg)
-    settings.nagios_cfg = "/etc/icinga/icinga.cfg" # debian/ubuntu default
+  unless File.exist?(settings.nagios_cfg)
+    settings.nagios_cfg = '/etc/icinga/icinga.cfg' # debian/ubuntu default
   end
 
   opts = OptionParser.new do |opts|
     opts.banner = "Usage: #{progname} [options]"
 
-    opts.on("-f NAGIOS_CFG", "--config NAGIOS_CFG",
-            "Path to your nagios.cfg (I will use the status_file setting") do |val|
+    opts.on('-f NAGIOS_CFG', '--config NAGIOS_CFG',
+            'Path to your nagios.cfg (I will use the status_file setting') do |val|
       settings.nagios_cfg = val
     end
 
-    opts.on("-s REGEX", "--service REGEX",
-            "Aggregate only services matching the given pattern") do |val|
+    opts.on('-s REGEX', '--service REGEX',
+            'Aggregate only services matching the given pattern') do |val|
       settings.service_pattern = val
     end
 
-    opts.on("-h REGEX", "--host REGEX",
-            "Aggregate only services from hosts matching the given pattern") do |val|
+    opts.on('-h REGEX', '--host REGEX',
+            'Aggregate only services from hosts matching the given pattern') do |val|
       settings.host_pattern = val
     end
 
-    opts.on( "--percent-warning NUM",
-            "Only alert if this percentage of the cluster is in warning state") do |val|
+    opts.on('--percent-warning NUM',
+            'Only alert if this percentage of the cluster is in warning state') do |val|
       settings.percent_warning = Float(val)
     end
 
-    opts.on( "--percent-critical NUM",
-            "Only alert if this percentage of the cluster is in critical state") do |val|
+    opts.on('--percent-critical NUM',
+            'Only alert if this percentage of the cluster is in critical state') do |val|
       settings.percent_critical = Float(val)
     end
 
-    opts.on( "--percent-unknown NUM",
-            "Only alert if this percentage of the cluster is in unknown state") do |val|
+    opts.on('--percent-unknown NUM',
+            'Only alert if this percentage of the cluster is in unknown state') do |val|
       settings.percent_unknown = Float(val)
     end
 
-    opts.on( "--show-ok", "Show details for checks in OK state too") do
+    opts.on('--show-ok', 'Show details for checks in OK state too') do
       settings.show_ok = true
     end
-    opts.on( "--quiet", "Quiet output") do
+    opts.on('--quiet', 'Quiet output') do
       settings.quiet = true
     end
-    opts.on( "--aggr", "Aggregate states") do
+    opts.on('--aggr', 'Aggregate states') do
       settings.aggr = true
     end
   end # OptionParser.new
@@ -135,20 +134,18 @@ def main(args)
   opts.parse!(args)
 
   # hacky parsing, for now
-  status_line = File.new(settings.nagios_cfg, "r").readlines.grep(/^\s*status_file\s*=/).first.chomp
+  status_line = File.new(settings.nagios_cfg, 'r').readlines.grep(/^\s*status_file\s*=/).first.chomp
   settings.status_path = status_line.split(/\s*=\s*/)[1]
   status = Nagios::Status::Model.new(settings.status_path)
 
-  results = Hash.new { |h,k| h[k] = 0 }
+  results = Hash.new { |h, k| h[k] = 0 }
   service_pattern = nil
   if settings.service_pattern
     service_pattern = Regexp.new(settings.service_pattern)
   end
 
   host_pattern = nil
-  if settings.host_pattern
-    host_pattern = Regexp.new(settings.host_pattern)
-  end
+  host_pattern = Regexp.new(settings.host_pattern) if settings.host_pattern
 
   Nagios::Status::Model::STATEMAP.values.each do |state|
     results[state] = []
@@ -156,47 +153,45 @@ def main(args)
 
   # Collect check results by state
   status.services(service_pattern, host_pattern).each do |service_status|
-    state = Nagios::Status::Model::STATEMAP[service_status["current_state"]]
-    if state == nil
-      state = "UNKNOWN(state=#{service_status["current_state"]})"
-    end
+    state = Nagios::Status::Model::STATEMAP[service_status['current_state']]
+    state = "UNKNOWN(state=#{service_status['current_state']})" if state.nil?
 
     results[state] << service_status
   end
 
-  total_results = ["OK", "WARNING", "CRITICAL", "UNKNOWN"].inject(0) {|aggr,state| aggr += results[state].length}
+  total_results = %w(OK WARNING CRITICAL UNKNOWN).inject(0) { |aggr, state| aggr += results[state].length }
   # Output a summary line
-  ["OK", "WARNING", "CRITICAL", "UNKNOWN"].each do | state|
+  %w(OK WARNING CRITICAL UNKNOWN).each do |state|
     print "#{state}=#{results[state].length} "
   end
   print "services=/#{settings.service_pattern}/ "
   print "hosts=/#{settings.host_pattern}/ "
   if settings.aggr
-      print "Problems: #{((results["UNKNOWN"].length + results["WARNING"].length + results["CRITICAL"].length).to_f / total_results) * 100}% "
+    print "Problems: #{((results['UNKNOWN'].length + results['WARNING'].length + results['CRITICAL'].length).to_f / total_results) * 100}% "
   end
   puts
 
   # More data output
-  if !settings.quiet
-    ["WARNING", "CRITICAL", "UNKNOWN"].each do |state|
+  unless settings.quiet
+    %w(WARNING CRITICAL UNKNOWN).each do |state|
       if results[state] && results[state].size > 0
         puts "Services in #{state}:"
-        results[state].sort { |a,b| a["host_name"] <=> b["host_name"] }.each do |service|
-          if service["long_plugin_output"] and !service["long_plugin_output"].empty?
-            puts "  #{service["host_name"]} => #{service["service_description"]} (#{service["plugin_output"]})"
-            puts "  #{service["long_plugin_output"]}"
+        results[state].sort { |a, b| a['host_name'] <=> b['host_name'] }.each do |service|
+          if service['long_plugin_output'] && !service['long_plugin_output'].empty?
+            puts "  #{service['host_name']} => #{service['service_description']} (#{service['plugin_output']})"
+            puts "  #{service['long_plugin_output']}"
           else
-            puts "  #{service["host_name"]} => #{service["service_description"]} (#{service["plugin_output"]})"
+            puts "  #{service['host_name']} => #{service['service_description']} (#{service['plugin_output']})"
           end
         end
       end # if results[state]
     end # for each non-OK state
   end # for !quiet
 
-  if settings.show_ok and results["OK"].size > 0
-    puts "OK Services:"
-    results["OK"].sort { |a,b| a["host_name"] <=> b["host_name"] }.each do |service|
-      puts "  #{service["host_name"]} => #{service["service_description"]}"
+  if settings.show_ok && results['OK'].size > 0
+    puts 'OK Services:'
+    results['OK'].sort { |a, b| a['host_name'] <=> b['host_name'] }.each do |service|
+      puts "  #{service['host_name']} => #{service['service_description']}"
     end
   end
 
@@ -204,41 +199,41 @@ def main(args)
 
   if !settings.aggr
     if settings.percent_unknown
-      exitcode = 3 if results["UNKNOWN"].length > 0 && (results["UNKNOWN"].length.to_f / total_results) * 100 >= settings.percent_unknown
+      exitcode = 3 if results['UNKNOWN'].length > 0 && (results['UNKNOWN'].length.to_f / total_results) * 100 >= settings.percent_unknown
     else
-      exitcode = 3 if results["UNKNOWN"].length > 0
+      exitcode = 3 if results['UNKNOWN'].length > 0
     end
 
     if settings.percent_warning
-      exitcode = 1 if results["WARNING"].length > 0 && ((results["WARNING"].length.to_f + results["CRITICAL"].length.to_f) / total_results) * 100 >= settings.percent_warning
+      exitcode = 1 if results['WARNING'].length > 0 && ((results['WARNING'].length.to_f + results['CRITICAL'].length.to_f) / total_results) * 100 >= settings.percent_warning
     else
-      exitcode = 1 if results["WARNING"].length > 0
+      exitcode = 1 if results['WARNING'].length > 0
     end
 
     if settings.percent_critical
-      exitcode = 2 if results["CRITICAL"].length > 0 && (results["CRITICAL"].length.to_f / total_results) * 100 >= settings.percent_critical
+      exitcode = 2 if results['CRITICAL'].length > 0 && (results['CRITICAL'].length.to_f / total_results) * 100 >= settings.percent_critical
     else
-      exitcode = 2 if results["CRITICAL"].length > 0
+      exitcode = 2 if results['CRITICAL'].length > 0
     end
   else
     if settings.percent_unknown
-      exitcode = 3 if results["UNKNOWN"].length > 0 && (results["UNKNOWN"].length.to_f / total_results) * 100 >= settings.percent_unknown
+      exitcode = 3 if results['UNKNOWN'].length > 0 && (results['UNKNOWN'].length.to_f / total_results) * 100 >= settings.percent_unknown
     else
-      exitcode = 3 if results["UNKNOWN"].length > 0
+      exitcode = 3 if results['UNKNOWN'].length > 0
     end
     if settings.percent_warning
-      exitcode = 1 if ((results["UNKNOWN"].length + results["WARNING"].length + results["CRITICAL"].length).to_f / total_results) * 100 >= settings.percent_warning
+      exitcode = 1 if ((results['UNKNOWN'].length + results['WARNING'].length + results['CRITICAL'].length).to_f / total_results) * 100 >= settings.percent_warning
     else
-      exitcode = 1 if results["WARNING"].length > 0
+      exitcode = 1 if results['WARNING'].length > 0
     end
     if settings.percent_critical
-      exitcode = 2 if ((results["UNKNOWN"].length + results["WARNING"].length + results["CRITICAL"].length).to_f / total_results) * 100 >= settings.percent_critical
+      exitcode = 2 if ((results['UNKNOWN'].length + results['WARNING'].length + results['CRITICAL'].length).to_f / total_results) * 100 >= settings.percent_critical
     else
-      exitcode = 2 if results["CRITICAL"].length > 0
+      exitcode = 2 if results['CRITICAL'].length > 0
     end
   end
 
-  return exitcode
+  exitcode
 end
 
 exit(main(ARGV))

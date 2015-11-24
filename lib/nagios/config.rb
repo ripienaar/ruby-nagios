@@ -1,38 +1,37 @@
 module Nagios
 
-=begin rdoc
-
-Parser of the main Nagios configuration file -- nagios.cfg. 
-
-Constructor parses Nagios' main config file and returns an object:
-each configuration option's value assigned to an instance variable and
-attribute reader method is created.
-
-Can be used as:
-
-      require 'nagios/config'
-      nagios = Nagios::Config.new "lib/ruby-nagios/test/data/nagios.cfg"
-
-      nagios.log_file
-  => "/var/log/nagios3/nagios.log"
-
-      nagios.status_file
-  => "/var/cache/nagios3/status.dat"
-
-= Configuration of the module
-
-Default search directory and file pattern (Dir.glob) is defined by
-Nagios::DEFAULT[:nagios_cfg_glob] constant. It is set in
-+config/default.rb+ file. 
-
-@note If you have more than one /etc/nagios* directories then only
-first one will be used. For example, Debian can have both Nagios 2 and
-3 installed. In the latter case configuration file is
-+/etc/nagios3/nagios.cfg+.
-
-
-=end  
-  class Config
+# rdoc
+#
+# Parser of the main Nagios configuration file -- nagios.cfg. 
+#
+# Constructor parses Nagios' main config file and returns an object:
+# each configuration option's value assigned to an instance variable and
+# attribute reader method is created.
+#
+# Can be used as:
+#
+#       require 'nagios/config'
+#       nagios = Nagios::Config.new "lib/ruby-nagios/test/data/nagios.cfg"
+#
+#       nagios.log_file
+#   => "/var/log/nagios3/nagios.log"
+#
+#       nagios.status_file
+#   => "/var/cache/nagios3/status.dat"
+#
+# = Configuration of the module
+#
+# Default search directory and file pattern (Dir.glob) is defined by
+# Nagios::DEFAULT[:nagios_cfg_glob] constant. It is set in
+# +config/default.rb+ file. 
+#
+# @note If you have more than one /etc/nagios* directories then only
+# first one will be used. For example, Debian can have both Nagios 2 and
+# 3 installed. In the latter case configuration file is
+# +/etc/nagios3/nagios.cfg+.
+#
+# 
+# =e  class Config
 
     ##
     # Initialize configuration file path. Check existence and
