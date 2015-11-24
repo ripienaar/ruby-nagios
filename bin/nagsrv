@@ -61,7 +61,7 @@
 require 'nagios'
 require 'optparse'
 
-statusfile = "status.log"
+statusfile = 'status.log'
 listhosts = false
 withservice = []
 listservices = false
@@ -74,99 +74,98 @@ json = nil
 details = nil
 
 OptionParser.new do |opts|
-  opts.separator "General Options"
-  opts.on("--statusfile FILE", "-s", "Path to the Nagios status.log") do |v|
+  opts.separator 'General Options'
+  opts.on('--statusfile FILE', '-s', 'Path to the Nagios status.log') do |v|
     statusfile = v
   end
 
-  opts.separator ""
-  opts.separator "Output Selectors"
-  opts.on("--list-hosts", "List hostnames that match certain criteria") do
+  opts.separator ''
+  opts.separator 'Output Selectors'
+  opts.on('--list-hosts', 'List hostnames that match certain criteria') do
     listhosts = true
   end
 
-  opts.on("--list-services", "List services that match certain criteria") do
+  opts.on('--list-services', 'List services that match certain criteria') do
     listservices = true
   end
 
-  opts.on("--json", "Returns complete json data instead of service names only") do
+  opts.on('--json', 'Returns complete json data instead of service names only') do
     json = true
   end
 
-  opts.on("--details", "Include additional serivce details in output") do
+  opts.on('--details', 'Include additional serivce details in output') do
     details = true
-    raise("Cannot use --details wirh --json") unless json.nil?
+    fail('Cannot use --details wirh --json') unless json.nil?
   end
 
-  opts.separator ""
-  opts.separator "Service and Host Selectors"
+  opts.separator ''
+  opts.separator 'Service and Host Selectors'
 
-  opts.on("--with-service SERVICE", "Match a service or regular expression") do |v|
+  opts.on('--with-service SERVICE', 'Match a service or regular expression') do |v|
     withservice << v
   end
 
-  opts.on("--for-host HOST", "Restrict selection of services to a specific host") do |v|
+  opts.on('--for-host HOST', 'Restrict selection of services to a specific host') do |v|
     forhost << v
   end
 
-  opts.on("--critical", "List only services which are critical") do
-    raise("Cannot use --critical with --ok or --warning") unless current_state.nil?
+  opts.on('--critical', 'List only services which are critical') do
+    fail('Cannot use --critical with --ok or --warning') unless current_state.nil?
     current_state = 2
   end
 
-  opts.on("--warning", "List only services which are warning") do
-    raise("Cannot use --warning with --critical or --ok") unless current_state.nil?
+  opts.on('--warning', 'List only services which are warning') do
+    fail('Cannot use --warning with --critical or --ok') unless current_state.nil?
     current_state = 1
   end
 
-  opts.on("--ok", "List only services which are ok") do
-    raise("Cannot use --ok with --critical or --warning") unless current_state.nil?
+  opts.on('--ok', 'List only services which are ok') do
+    fail('Cannot use --ok with --critical or --warning') unless current_state.nil?
     current_state = 0
   end
 
-  opts.on("--notify-enabled", "List only services with notification enabled") do
+  opts.on('--notify-enabled', 'List only services with notification enabled') do
     notify = 1
   end
 
-  opts.on("--notify-disabled", "List only services with notification disabled") do
+  opts.on('--notify-disabled', 'List only services with notification disabled') do
     notify = 0
   end
 
-  opts.separator ""
-  opts.separator "Actions for Matched Services/Hosts"
-  opts.on("--enable-notify", "Enable notifications for selected services") do
-    action = "[${tstamp}] ENABLE_SVC_NOTIFICATIONS;${host};${service}"
+  opts.separator ''
+  opts.separator 'Actions for Matched Services/Hosts'
+  opts.on('--enable-notify', 'Enable notifications for selected services') do
+    action = '[${tstamp}] ENABLE_SVC_NOTIFICATIONS;${host};${service}'
   end
 
-  opts.on("--disable-notify", "Disable notifications for selected services") do
-    action = "[${tstamp}] DISABLE_SVC_NOTIFICATIONS;${host};${service}"
+  opts.on('--disable-notify', 'Disable notifications for selected services') do
+    action = '[${tstamp}] DISABLE_SVC_NOTIFICATIONS;${host};${service}'
   end
 
-  opts.on("--enable-checks", "Enable checks for selected services") do
-    action = "[${tstamp}] ENABLE_SVC_CHECK;${host};${service};${tstamp}"
+  opts.on('--enable-checks', 'Enable checks for selected services') do
+    action = '[${tstamp}] ENABLE_SVC_CHECK;${host};${service};${tstamp}'
   end
 
-  opts.on("--disable-checks", "Disable checks for selected services") do
-    action = "[${tstamp}] DISABLE_SVC_CHECK;${host};${service};${tstamp}"
+  opts.on('--disable-checks', 'Disable checks for selected services') do
+    action = '[${tstamp}] DISABLE_SVC_CHECK;${host};${service};${tstamp}'
   end
 
-  opts.on("--force-check", "Force checks for selected services") do
-    action = "[${tstamp}] SCHEDULE_FORCED_SVC_CHECK;${host};${service};${tstamp}"
+  opts.on('--force-check', 'Force checks for selected services') do
+    action = '[${tstamp}] SCHEDULE_FORCED_SVC_CHECK;${host};${service};${tstamp}'
   end
 
-  opts.on("--acknowledge", "Acknowledge services without sending notifies") do
+  opts.on('--acknowledge', 'Acknowledge services without sending notifies') do
     action = "[${tstamp}] ACKNOWLEDGE_SVC_PROBLEM;${host};${service};1;0;1;#{ENV['USER']};Acknowledged from CLI"
   end
 
-  opts.on("--delete-svc-acknowledgement", "Remove acks from services") do
+  opts.on('--delete-svc-acknowledgement', 'Remove acks from services') do
     action = "[${tstamp}] REMOVE_SVC_ACKNOWLEDGEMENT;${host};${service};1;0;1;#{ENV['USER']};Ack removed from CLI"
   end
-  
-  opts.on("--delete-comments", "") do
-    comment_id = 1
-    action = "[${tstamp}] DEL_SVC_COMMENT;${comment_id};${tstamp}"
-  end
 
+  opts.on('--delete-comments', '') do
+    comment_id = 1
+    action = '[${tstamp}] DEL_SVC_COMMENT;${comment_id};${tstamp}'
+  end
 end.parse!
 
 abort "Cannot find #{statusfile}" unless File.exist?(statusfile)
@@ -175,20 +174,17 @@ nagios = Nagios::Status.new statusfile
 
 nagios.parsestatus
 
-
 # We want hosts so abuse the action field to print just the hostname
 # and select all hosts unless other action/forhost was desigred then
 # this really is just a noop and it reverts to noral behaviour
 if listhosts
-  action = "${host}" if action == nil
-  forhost = "/." if forhost.size == 0
+  action = '${host}' if action.nil?
+  forhost = '/.' if forhost.size == 0
 end
 
-if listservices && action == nil
-  action = "${service}"
-end
+action = '${service}' if listservices && action.nil?
 
-options = {:forhost => forhost, :notifyenabled => notify, :action => action, :withservice => withservice, :current_state => current_state, :json => json, :details => details}
+options = { forhost: forhost, notifyenabled: notify, action: action, withservice: withservice, current_state: current_state, json: json, details: details }
 services = nagios.find_services(options)
 
 puts services.join("\n")

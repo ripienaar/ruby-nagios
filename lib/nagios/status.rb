@@ -2,11 +2,11 @@ module Nagios
   class Status
     attr_reader :status, :path
 
-    def initialize(statusfile=nil)
+    def initialize(statusfile = nil)
       if statusfile
-        raise ArgumentError, "Statusfile file name must be provided" unless statusfile
-        raise RuntimeError, "Statusfile #{statusfile} does not exist" unless File.exist? statusfile
-        raise RuntimeError, "Statusfile #{statusfile} is not readable" unless File.readable? statusfile
+        fail ArgumentError, "Statusfile file name must be provided" unless statusfile
+        fail "Statusfile #{statusfile} does not exist" unless File.exist? statusfile
+        fail "Statusfile #{statusfile} is not readable" unless File.readable? statusfile
         @path = statusfile
       end
       @status = {'hosts' => { }}
@@ -15,37 +15,35 @@ module Nagios
     end
 
     # Parses a nagios status file returning a data structure for all the data
-    def parsestatus path=nil
-
+    def parsestatus(path = nil)
       path ||= @path
-      raise ArgumentError, "Statusfile file name must be provided either in constructor or as argument to parsestatus method" unless path
+      fail ArgumentError, "Statusfile file name must be provided either in constructor or as argument to parsestatus method" unless path
 
-      @status, handler, blocklines = {'hosts' => {}}, '', []
+      @status = {'hosts' => {}}
+      handler = ''
+      blocklines = []
 
-      File.readlines(path, :encoding => 'iso-8859-1').each do |line|
-
+      File.readlines(path, encoding: 'iso-8859-1').each do |line|
         # start of new sections
         if line =~ /(\w+) \{/
           blocklines = []
-          handler = $1
+          handler = Regexp.last_match(1)
         end
 
         # gather all the lines for the block into an array
         # we'll pass them to a handler for this kind of block
-        if line =~ /\s+(\w+)=(.+)/ && handler != ""
-          blocklines << line
-        end
+        blocklines << line if line =~ /\s+(\w+)=(.+)/ && handler != ""
 
         # end of a section
         if line =~ /\}/ && handler != "" && self.respond_to?("handle_#{handler}", include_private = true)
-          self.send "handle_#{handler}".to_sym, blocklines
+          send "handle_#{handler}".to_sym, blocklines
           handler = ""
         end
       end
       self
     end
 
-    alias :parse :parsestatus
+    alias_method :parse, :parsestatus
 
     # Returns a list of all hosts matching the options in options
     def find_hosts(options = {})
@@ -122,7 +120,7 @@ module Nagios
         # when printing services with notifications en/dis it makes
         # most sense to print them in host:service format, abuse the
         # action option to get this result
-        action = "${host}:${service}" if (notifications != nil && action == nil)
+        action = "${host}:${service}" if !notifications.nil? && action.nil?
 
         services << parse_command_template(action, host_name, service_description, service_description)
       end
@@ -130,15 +128,12 @@ module Nagios
       if json
         [ "[", svcs.join(", \n").gsub("=>", ":"), "]" ]
       elsif details
-        space = ' '*100
+        space = ' ' * 100
         delim = ' '
         state = ['OK', 'Warning', 'Critical', 'Unknown']
-        details = Array.new
+        details = []
         svcs.each do |s|
-          details << (s['host_name'] + space)[0, 25] + delim \
-                   + (s['service_description'] + space)[0,35] + delim \
-                   + (state[s['current_state'].to_i].to_s + space)[0,8] + delim \
-                   + (s['plugin_output'] + space)[0,120]
+          details << (s['host_name'] + space)[0, 25] + delim \ + (s['service_description'] + space)[0, 35] + delim \ + (state[s['current_state'].to_i].to_s + space)[0, 8] + delim \ + (s['plugin_output'] + space)[0, 120]
         end
         details
 
@@ -151,7 +146,7 @@ module Nagios
 
     # Add search terms, does all the mangling of regex vs string and so on
     def search_term(haystack, needle)
-      needle = Regexp.new(needle.gsub("\/", "")) if needle.match("^/")
+      needle = Regexp.new(needle.delete("\/")) if needle.match("^/")
       {haystack => needle}
     end
 
@@ -167,7 +162,7 @@ module Nagios
       query << search if search.class == Hash
       query = search if search.class == Array
 
-      @status["hosts"].each do |host,v|
+      @status["hosts"].each do |host, _v|
         find_host_services(host) do |service|
           matchcount = 0
 
@@ -181,9 +176,7 @@ module Nagios
             end
           end
 
-          if matchcount == query.size
-            services << service
-          end
+          services << service if matchcount == query.size
         end
       end
 
@@ -192,8 +185,8 @@ module Nagios
 
     # yields the hash for each service on a host
     def find_host_services(host)
-      if @status["hosts"][host].has_key?("servicestatus")
-        @status["hosts"][host]["servicestatus"].each do |s, v|
+      if @status["hosts"][host].key?("servicestatus")
+        @status["hosts"][host]["servicestatus"].each do |s, _v|
           yield(@status["hosts"][host]["servicestatus"][s])
         end
       end
@@ -213,12 +206,12 @@ module Nagios
     def get_service_name(lines)
       if s = lines.grep(/\s+service_description=(\S+)/).first
         if s =~ /service_description=(.+)$/
-          service = $1
+          service = Regexp.last_match(1)
         else
-          raise("Cant't parse service in block: #{s}")
+          fail("Cant't parse service in block: #{s}")
         end
       else
-        raise("Cant't find a service in block")
+        fail("Cant't find a service in block")
       end
 
       service
@@ -228,12 +221,12 @@ module Nagios
     def get_host_name(lines)
       if h = lines.grep(/\s+host_name=(\w+)/).first
         if h =~ /host_name=(.+)$/
-          host = $1
+          host = Regexp.last_match(1)
         else
-          raise("Cant't parse hostname in block: #{h}")
+          fail("Cant't parse hostname in block: #{h}")
         end
       else
-        raise("Cant't find a hostname in block")
+        fail("Cant't find a hostname in block")
       end
 
       host
@@ -244,9 +237,7 @@ module Nagios
       @status["info"] = {} unless @status["info"]
 
       lines.each do |l|
-        if l =~ /\s+(\w+)=(\w+)/
-          @status["info"][$1] = $2
-        end
+        @status["info"][Regexp.last_match(1)] = Regexp.last_match(2) if l =~ /\s+(\w+)=(\w+)/
       end
     end
 
@@ -261,10 +252,10 @@ module Nagios
 
       lines.each do |l|
         if l =~ /\s+(\w+)=(.+)$/
-          if $1 == "host_name"
-            @status["hosts"][host]["servicestatus"][service][$1] = host
+          if Regexp.last_match(1) == "host_name"
+            @status["hosts"][host]["servicestatus"][service][Regexp.last_match(1)] = host
           else
-            @status["hosts"][host]["servicestatus"][service][$1] = $2
+            @status["hosts"][host]["servicestatus"][service][Regexp.last_match(1)] = Regexp.last_match(2)
           end
         end
       end
@@ -284,14 +275,14 @@ module Nagios
     def get_contact_name(lines)
       if h = lines.grep(/\s+contact_name=(\w+)/).first
         if h =~ /contact_name=(.*)$/
-          contact_name = $1
+          contact_name = Regexp.last_match(1)
         else
-          raise("Can't parse contact_name in block: #{h}")
+          fail("Can't parse contact_name in block: #{h}")
         end
       else
-        raise("Can't parse contactstatus block")
+        fail("Can't parse contactstatus block")
       end
-      return contact_name
+      contact_name
     end
 
     # Parses a servicecomment block
@@ -340,15 +331,15 @@ module Nagios
     def get_downtime_id(lines)
       if h = lines.grep(/\s+downtime_id=(.*)$/).first
         if h =~ /downtime_id=(.+)$/
-          downtime_id = $1
+          downtime_id = Regexp.last_match(1)
         else
-          raise("Can't parse downtime_id in block: #{h}")
+          fail("Can't parse downtime_id in block: #{h}")
         end
       else
-        raise("Can't find downtime_id in block")
+        fail("Can't find downtime_id in block")
       end
 
-      return downtime_id
+      downtime_id
     end
 
     # Parses a programstatus block
@@ -356,9 +347,7 @@ module Nagios
       @status["process"] = {} unless @status["process"]
 
       lines.each do |l|
-        if l =~ /\s+(\w+)=(\w+)/
-          @status["process"][$1] = $2
-        end
+        @status["process"][Regexp.last_match(1)] = Regexp.last_match(2) if l =~ /\s+(\w+)=(\w+)/
       end
     end
 
@@ -371,7 +360,7 @@ module Nagios
 
       lines.each do |l|
         if l =~ /\s+(\w+)=(.+)\s*$/
-          @status["hosts"][host]["hoststatus"][$1] = $2
+          @status["hosts"][host]["hoststatus"][Regexp.last_match(1)] = Regexp.last_match(2)
         end
       end
     end
